@@ -4,7 +4,8 @@ $(document).ready(function(){
 	leonSlideyCarousel();
 });
 $(window).resize(function(){
-	if(this.resizeEnd) clearTimeout(this.resizeEnd);
+	var resizeEnd;
+	clearTimeout(this.resizeEnd);
     this.resizeEnd = setTimeout(function() {
     	// put functions in here
         calcs();
@@ -18,12 +19,12 @@ $(window).load(function(){
 });
 function leonSlideyCarousel() {
 	// set defaults
-	auto_slide = true;
-	arrow_nav = true;
-	bottom_nav = true;
-	show_title = true;
-	slideChangeSpeed = 1000;
-	animateSpeed = 500;
+	var auto_slide = true;
+		arrow_nav = true;
+		bottom_nav = true;
+		show_title = true;
+		slideChangeSpeed = 3000;
+		animateSpeed = 500;
 
 	calcs();
 	$('.boom li:first').addClass('current');
