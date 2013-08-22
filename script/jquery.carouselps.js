@@ -13,7 +13,7 @@
 			arrow_nav: true, 
 			bottom_nav: true, 
 			show_title: true, 
-			slideChangeSpeed: 1000, 
+			slideChangeSpeed: 5000, 
 			animateSpeed: 500 
 		};
 			
@@ -112,7 +112,8 @@
 							break;
 							case 'bottom':
 								$sliderItemCurrent.removeClass('current');
-								$sliderItems.eq(bottomNavClickIndex).addClass("current");
+								var index = options.continuous ? bottomNavClickIndex + 1 : bottomNavClickIndex;
+								$sliderItems.eq(index).addClass("current");
 							break;
 						}
 						$sliderItemCurrent = $slider.find('.current');
