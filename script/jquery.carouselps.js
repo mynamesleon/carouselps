@@ -1,39 +1,37 @@
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~                   Carousel Plugin                   ~~
-~~           Leon Slater, Codehouse Group LTD          ~~
-~~                  www.lpslater.co.uk                 ~~
+~~           Leon Slater, www.lpslater.co.uk           ~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 (function ($) {
-	$.fn.carouselps = function () {
-		
-		var auto_slide = true,
-			arrow_nav = true,
-			bottom_nav = true,
-			show_title = true,
-			responsive_site = true,
-			slideChangeSpeed = 3000,
-			animateSpeed = 500; 
+	$.fn.carouselps = function (options) {
 			
-/*		var defaults = { auto_slide: true, arrow_nav: true, bottom_nav: true, show_title: true, slideChangeSpeed: 1000,	animateSpeed: 500 };
-		var settings = $.extend({}, defaults, options);  */
+		var defaults = { continuous: true, auto_slide: true, arrow_nav: true, bottom_nav: true, show_title: true, slideChangeSpeed: 1000,	animateSpeed: 500 };
+		var settings = $.extend(defaults, options);  
 		
 		return this.each(function () {
 			
-			var $slider = $(this),
+			var auto_slide = settings.auto_slide,
+				continuous = settings.continuous,
+				arrow_nav = settings.arrow_nav,
+				bottom_nav = settings.bottom_nav,
+				show_title = settings.show_title,
+				slideChangeSpeed = settings.slideChangeSpeed,
+				animateSpeed = settings.animateSpeed,
+				$slider = $(this),
 				$sliderItems = $slider.children('li'),
 				$sliderItemFirst = $slider.children('li:first-child'),
 				$sliderItemLast = $slider.children('li:last-child'),
 				$sliderItemCurrent = $slider.find('.current'),
+				$sliderStartClone,
+				$sliderEndClone,
 				$sliderParent,
 				$sliderWrapper,
-				autoSlide,
 				$bottomNav,
 				$bottomNavItem,
 				bottomNavClickIndex,
 				isAnimating = false,
-				slideInterval,
 				animateDirection,
 				timer,
 				youtubeExists = $slider.find('iframe').length,
@@ -54,11 +52,6 @@
 					$sliderWrapper = $slider.parents('.slider-wrapper'); 
 					$sliderParent = $slider.parent();
 					$sliderItemFirst.addClass('current');
-					$sliderItemCurrent = $slider.find('.current');
-					lpslater.calcs();
-					if (auto_slide){
-						lpslater.auto_slide();
-					}
 					if (arrow_nav){
 						lpslater.arrow_nav();
 					}
@@ -67,6 +60,15 @@
 					}
 					if (show_title){
 						lpslater.show_title();
+					}
+					if (continuous){
+						lpslater.continuous();
+						$sliderItems = $slider.children('li');
+					}
+					$sliderItemCurrent = $slider.find('.current');
+					lpslater.calcs();
+					if (auto_slide){
+						lpslater.auto_slide();
 					}
 				},
 				
@@ -79,7 +81,14 @@
 					});
 					$slider.width(accum_width); // calculates container width to equal the sum of all its children
 					*/
-					$slider.animate({marginLeft: $slider.find('.current').position().left * -1}, 200); 
+					$slider.css('margin-left', $sliderItemCurrent.position().left * -1); 
+				},
+				
+				continuous: function () {
+					$sliderItemFirst.clone(true).insertAfter($sliderItemLast).addClass('clone-last');
+					$sliderItemLast.clone(true).insertBefore($sliderItemFirst).addClass('clone-first');
+					$sliderStartClone = $slider.find('li:first-child');
+					$sliderEndClone = $slider.find('li:last-child');
 				},
 				
 				animate: function () {
@@ -87,19 +96,19 @@
 						isAnimating = true;
 						switch(animateDirection) {
 							case 'prev':
-								if ($sliderItemFirst.hasClass('current')) {
+								if (!$sliderItemFirst.hasClass('current') || continuous){
+									$sliderItemCurrent.removeClass('current').prev().addClass('current');
+								} else {
 									$sliderItemCurrent.removeClass('current');
 									$sliderItemLast.addClass('current');
-								} else {
-									$sliderItemCurrent.removeClass('current').prev().addClass('current');
 								}
 							break;
 							case 'next':
-								if ($sliderItemLast.hasClass('current')) {
+								if (!$sliderItemLast.hasClass('current') || continuous) {
+									$sliderItemCurrent.removeClass('current').next().addClass('current');
+								} else {
 									$sliderItemCurrent.removeClass('current');
 									$sliderItemFirst.addClass('current');
-								} else {
-									$sliderItemCurrent.removeClass('current').next().addClass('current');
 								}
 							break;
 							case 'bottom':
@@ -108,14 +117,27 @@
 							break;
 						}
 						$sliderItemCurrent = $slider.find('.current');
-						var afterAnim = function() {
-							isAnimating = false;
+						function afterAnim() {
+							if (continuous) {
+								if ($sliderStartClone.hasClass('current')){
+									$sliderItemCurrent.removeClass('current');
+							 		$slider.css('margin-left', $sliderItemLast.position().left * -1);
+									$sliderItemLast.addClass('current');
+								} else if ($sliderEndClone.hasClass('current')){
+									$sliderItemCurrent.removeClass('current');
+							 		$slider.css('margin-left', $sliderItemFirst.position().left * -1);
+									$sliderItemFirst.addClass('current');
+								}
+								$sliderItemCurrent = $slider.find('.current');
+							}
 							if (bottom_nav){
 								$bottomNavItem.removeClass('current');
-								$bottomNavItem.eq($sliderItemCurrent.index()).addClass('current');
+								var index = continuous? $sliderItemCurrent.index() -1 : $sliderItemCurrent.index();
+								$bottomNavItem.eq(index).addClass('current');
 							}
+							isAnimating = false;
 						}
-						if ($slider.height() != $sliderItemCurrent.height()){
+						if ($slider.height() != $sliderItemCurrent.height() || differentHeights){
 							 $slider.animate({marginLeft: $sliderItemCurrent.position().left * -1, height: $sliderItemCurrent.height()}, animateSpeed, function() {
 								 afterAnim();
 							 });
@@ -131,26 +153,27 @@
 				},
 				
 				auto_slide: function () {
-						autoSlide = function() {
-							slideInterval = setInterval(function(){
-								animateDirection = 'next';
-								lpslater.animate();
-							}, slideChangeSpeed);
+					var slideInterval;
+					function autoSlide() {
+						slideInterval = setInterval(function(){
+							animateDirection = 'next';
+							lpslater.animate();
+						}, slideChangeSpeed);
+					};
+					autoSlide();
+					$sliderWrapper.hover(function(){
+						clearInterval(slideInterval);
+					}, function(){
+						if (!youtubePlaying){
+							autoSlide();
 						}
-						autoSlide();
-						$sliderWrapper.hover(function(){
+					});
+					if (youtubeExists){
+						$slider.find('iframe').hover(function(){
+							youtubePlaying = true;
 							clearInterval(slideInterval);
-						}, function(){
-							if (!youtubePlaying){
-								autoSlide();
-							}
 						});
-						if (youtubeExists){
-							$slider.find('iframe').hover(function(){
-								youtubePlaying = true;
-								clearInterval(slideInterval);
-							});
-						}
+					}
 				},
 				
 				arrow_nav: function () {
@@ -234,3 +257,13 @@
 	
 	};
 }( jQuery ));
+
+/*var obj = document.createElement('div'),
+	props = ['perspectiveProperty', 'WebkitPerspective', 'MozPerspective', 'OPerspective', 'msPerspective'];
+for (var i in props) {
+    if ( obj.style[ props[i] ] !== undefined ) {
+		alert('css3 perspective supported');
+    } else {
+		alert("fail");
+	}
+}*/
