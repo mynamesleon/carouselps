@@ -2,12 +2,14 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~                   Carousel Plugin                   ~~
 ~~           Leon Slater, www.lpslater.co.uk           ~~
+~~                    Version 1.0.0                    ~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 (function ($) {
 	$.fn.carouselps = function (options) {
 		
 		var defaults = {
+			fade: true, // if true, will set continuous and use_css3 to false
 			continuous: true, 
 			auto_slide: true, 
 			arrow_nav: true, 
@@ -41,7 +43,6 @@
 				youtubePlaying = false,
 				itemMinHeight,
 				heightsArray = [],
-				iframe = $slider.find('iframe'),
 				animProp, cssPrefix;
 			
 			var lpslater = {
@@ -62,18 +63,27 @@
 					if (options.show_title){
 						lpslater.show_title();
 					}
+					if (options.fade){
+						lpslater.fade();
+					}
 					if (options.continuous){
 						lpslater.continuous();
-						$sliderItems = $slider.children('li');
 					}
 					$sliderItemCurrent = $slider.find('.current');
-					if (options.use_css){
-						lpslater.use_css();
+					if (options.use_css3){
+						lpslater.use_css3();
 					}
 					lpslater.calcs();
 					if (options.auto_slide){
 						lpslater.auto_slide();
 					}
+				},
+
+				fade: function() {
+					options.continuous = options.use_css3 = false;
+					$sliderItems.css('position', 'absolute');
+					$sliderItems.hide();
+					$sliderItemFirst.show();
 				},
 				
 				use_css3: function () {
@@ -86,6 +96,7 @@
 							animProp = '-' + cssPrefix + '-transform';
 							/*$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');*/
 							$slider.css('-' + cssPrefix + '-transition-duration', '0s');
+							$slider.css('-' + cssPrefix + '-transition-timing-function', 'ease-in-out');
 							return true;
 						}
 					}
@@ -93,25 +104,27 @@
 
 				calcs: function () {
 					$sliderItems.width($sliderParent.innerWidth()); // sets each li to initial width of container - must be first
-					/*
-					var accum_width = 90;
+					/* var accum_width = 90;
 					$sliderItems.each(function() {
 						accum_width += $(this).outerWidth();
 					});
-					$slider.width(accum_width); // calculates container width to equal the sum of all its children
-					*/
-					if (options.use_css && css3support){
-						$slider.css(animProp, 'translate3d('+ $sliderItemCurrent.position().left*-1 +'px, 0, 0)'); 
-					} else { 
-						$slider.css('margin-left', $sliderItemCurrent.position().left * -1); 
+					$slider.width(accum_width); // calculates container width to equal the sum of all its children */
+					if (!options.fade){
+						if (options.use_css3 && css3support){
+							$slider.css(animProp, 'translate3d('+ $sliderItemCurrent.position().left * -1 +'px, 0, 0)'); 
+						} else { 
+							$slider.css('margin-left', ''+ $sliderItemCurrent.position().left * -1 +'px'); 
+						}
 					}
 				},
 				
 				continuous: function () {
-					$sliderItemFirst.clone(true).insertAfter($sliderItemLast).addClass('clone-last');
-					$sliderItemLast.clone(true).insertBefore($sliderItemFirst).addClass('clone-first');
+					$sliderItemLast.clone(true).insertBefore($sliderItemFirst).addClass('clone');
+					$sliderItemFirst.clone(true).insertAfter($sliderItemLast).addClass('clone');
 					$sliderStartClone = $slider.find('li:first-child');
 					$sliderEndClone = $slider.find('li:last-child');
+					$sliderEndClone.removeClass('current');
+					$sliderItems = $slider.children('li');
 				},
 				
 				animate: function () {
@@ -141,65 +154,59 @@
 							break;
 						}
 						$sliderItemCurrent = $slider.find('.current');
-						function afterAnim() {
-							if (options.continuous) {
-								if ($sliderStartClone.hasClass('current')){
-									$sliderItemCurrent.removeClass('current');
-									if (options.use_css && css3support){
-										$slider.css('-' + cssPrefix + '-transition-duration', '0s');
-										$slider.css(animProp, 'translate3d('+ $sliderItemLast.position().left*-1 +'px, 0, 0)'); 
-									} else {
-							 			$slider.css('margin-left', $sliderItemLast.position().left * -1);
-							 		}
-									$sliderItemLast.addClass('current');
-								} else if ($sliderEndClone.hasClass('current')) {
-									$sliderItemCurrent.removeClass('current');
-									if (options.use_css && css3support){
-										$slider.css('-' + cssPrefix + '-transition-duration', '0s');
-										$slider.css(animProp, 'translate3d('+ $sliderItemFirst.position().left*-1 +'px, 0, 0)'); 
-									} else {
-							 			$slider.css('margin-left', $sliderItemFirst.position().left * -1);
-							 		}
-									$sliderItemFirst.addClass('current');
-								}
-								$sliderItemCurrent = $slider.find('.current');
-							}
-							if (options.bottom_nav){
-								$bottomNavItem.removeClass('current');
-								var index = options.continuous ? $sliderItemCurrent.index() -1 : $sliderItemCurrent.index();
-								$bottomNavItem.eq(index).addClass('current');
-							}
-							isAnimating = false;
-						}
-						if ($slider.height() != $sliderItemCurrent.height() || differentHeights){
-							if (options.use_css && css3support){
-								$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
-								$slider.css(animProp, 'translate3d('+ $sliderItemCurrent.position().left*-1 +'px, 0, 0)'); 
-								setTimeout(function(){
-									afterAnim();
-								}, options.animateSpeed);
-							} else {
-								$slider.animate({marginLeft: $sliderItemCurrent.position().left * -1, height: $sliderItemCurrent.height()}, options.animateSpeed, function() {
-									afterAnim();
-								});
-							}
+						if (options.use_css3 && css3support){
+							$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
+							$slider.css(animProp, 'translate3d('+ $sliderItemCurrent.position().left *-1 +'px, 0, 0)'); 
 						} else {
-							if (options.use_css && css3support){
-								$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
-								$slider.css(animProp, 'translate3d('+ $sliderItemCurrent.position().left*-1 +'px, 0, 0)'); 
-								setTimeout(function(){
-									afterAnim();
-								}, options.animateSpeed);
+							if (options.fade){
+								$sliderItems.fadeOut(options.animateSpeed);
+								$sliderItemCurrent.fadeIn(options.animateSpeed);
 							} else {
-								$slider.animate({marginLeft: $sliderItemCurrent.position().left * -1}, options.animateSpeed, function(){
-									 afterAnim();
-								});
+								$slider.animate({marginLeft: $sliderItemCurrent.position().left * -1}, {duration: options.animateSpeed, queue: false});
 							}
 						}
+						setTimeout(lpslater.after_anim, options.animateSpeed);						
 					}
 					if (options.auto_slide){
 						youtubePlaying = false;
 					}
+				},
+
+				after_anim: function() {
+					var cloneUsed = false;
+					if (options.continuous) {
+						if ($sliderStartClone.hasClass('current') || $sliderEndClone.hasClass('current')){
+							var switchTo = $sliderStartClone.hasClass('current') ? $sliderItemLast.position().left*-1 : $sliderItemFirst.position().left*-1;
+							if (options.use_css3 && css3support){
+								$slider.css('-' + cssPrefix + '-transition-duration', '0s');
+								$slider.css(animProp, 'translate3d('+ switchTo +'px, 0, 0)'); 
+							} else {
+					 			$slider.css('margin-left', ' '+ switchTo +'px');
+					 		}
+							if ($sliderStartClone.hasClass('current')){
+								$sliderItemLast.addClass('current');
+							} 
+							if ($sliderEndClone.hasClass('current')){
+								$sliderItemFirst.addClass('current');
+							}
+							$sliderItemCurrent.removeClass('current');
+							cloneUsed = true;
+						}
+						$sliderItemCurrent = $slider.find('.current');
+					}
+					if (options.bottom_nav){
+						$bottomNavItem.removeClass('current');
+						var index = options.continuous ? $sliderItemCurrent.index() -1 : $sliderItemCurrent.index();
+						$bottomNavItem.eq(index).addClass('current');
+					}
+					if (differentHeights && $slider.height() != $sliderItemCurrent.height()){
+						if (options.use_css3 && css3support && !cloneUsed){
+							$slider.height($sliderItemCurrent.height());
+						} else {
+							$slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
+						}
+					}
+					isAnimating = cloneUsed = false;
 				},
 				
 				auto_slide: function () {
@@ -262,7 +269,18 @@
 				},
 				
 				youtube_exists: function () {
-					iframe.height(iframe.width()*0.5625);
+					iframe = $slider.find('iframe');
+					iframe.each(function(){
+						var aspectRatio = $(this).height() / $(this).width() * 100 + "%";
+						$(this).wrap("<div class='video-wrapper' style='padding-bottom: "+ aspectRatio +"' />");
+						$(this).css({
+							'position': 'absolute',
+							'height': '100%',
+							'width': '100%',
+							'top': '0',
+							'left': '0'
+						});
+					});
 				},
 				
 				slider_heights: function () {
@@ -294,9 +312,6 @@
 					clearTimeout(timer);
 				}
 				timer = setTimeout(function () {
-					if (youtubeExists){
-						lpslater.youtube_exists();
-					}
 					lpslater.calcs();
 					if (differentHeights){
 						$slider.height($sliderItemCurrent.height());
@@ -307,13 +322,3 @@
 	
 	};
 }( jQuery ));
-
-/*var obj = document.createElement('div'),
-	props = ['perspectiveProperty', 'WebkitPerspective', 'MozPerspective', 'OPerspective', 'msPerspective'];
-for (var i in props) {
-    if ( obj.style[ props[i] ] !== undefined ) {
-		alert('css3 perspective supported');
-    } else {
-		alert("fail");
-	}
-}*/
