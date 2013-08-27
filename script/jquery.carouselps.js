@@ -9,7 +9,7 @@
 	$.fn.carouselps = function (options) {
 		
 		var defaults = {
-			fade: true, // if true, will set continuous and use_css3 to false
+			fade: false, // if true, will set continuous and use_css3 to false
 			continuous: true, 
 			auto_slide: true, 
 			arrow_nav: true, 
