@@ -15,7 +15,7 @@
 			arrow_nav: true, 
 			bottom_nav: true, 
 			show_title: true, 
-			use_css3: true,
+			use_css3: false,
 			slideChangeSpeed: 5000, 
 			animateSpeed: 500 
 		};
@@ -165,7 +165,14 @@
 								$slider.animate({marginLeft: $sliderItemCurrent.position().left * -1}, {duration: options.animateSpeed, queue: false});
 							}
 						}
-						setTimeout(lpslater.after_anim, options.animateSpeed);						
+						if (differentHeights && $slider.height() != $sliderItemCurrent.height()){
+							if (options.use_css3 && css3support){
+								$slider.height($sliderItemCurrent.height());
+							} else {
+								$slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
+							}
+						}
+						setTimeout(lpslater.after_anim, options.animateSpeed + 100);						
 					}
 					if (options.auto_slide){
 						youtubePlaying = false;
@@ -173,7 +180,6 @@
 				},
 
 				after_anim: function() {
-					var cloneUsed = false;
 					if (options.continuous) {
 						if ($sliderStartClone.hasClass('current') || $sliderEndClone.hasClass('current')){
 							var switchTo = $sliderStartClone.hasClass('current') ? $sliderItemLast.position().left*-1 : $sliderItemFirst.position().left*-1;
@@ -199,14 +205,7 @@
 						var index = options.continuous ? $sliderItemCurrent.index() -1 : $sliderItemCurrent.index();
 						$bottomNavItem.eq(index).addClass('current');
 					}
-					if (differentHeights && $slider.height() != $sliderItemCurrent.height()){
-						if (options.use_css3 && css3support && !cloneUsed){
-							$slider.height($sliderItemCurrent.height());
-						} else {
-							$slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
-						}
-					}
-					isAnimating = cloneUsed = false;
+					isAnimating = false;
 				},
 				
 				auto_slide: function () {
