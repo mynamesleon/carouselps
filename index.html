@@ -2,13 +2,16 @@
 <!DOCTYPE html><head>
 	<title>Responsive Banner</title>
 	<link rel="stylesheet" href="../responsiveCarousel/css/style.css" />
-	<script src="../responsiveCarousel/script/jquery.min.js"></script>
-	<script src="../responsiveCarousel/script/jquery.carouselps.js"></script>
+	<script src="script/jquery.min.js"></script>
+	<script src="script/jquery.carouselps.js"></script>
 	<link href='http://fonts.googleapis.com/css?family=Noto+Serif:400,700,400italic' rel='stylesheet' type='text/css'>
     <script>
 		$(document).ready(function(){
 			$('.boom').carouselps({
-				continuous: true
+				continuous: true,
+				use_css3: true,
+				slideChangeSpeed: 2000, 
+				animateSpeed: 500 
 			});
 		});
 	</script>

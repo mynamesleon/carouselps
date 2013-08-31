@@ -43,8 +43,9 @@
 				youtubePlaying = false,
 				itemMinHeight,
 				heightsArray = [],
-				animProp, cssPrefix;
-			
+				animProp, cssPrefix, slideTimer,
+			    isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase());
+
 			var lpslater = {
 				init: function () {
 					$slider.wrap("<div class='slider-wrapper'><div class='slider-wrap'/></div>");
@@ -77,6 +78,9 @@
 					if (options.auto_slide){
 						lpslater.auto_slide();
 					}
+					if (options.use_css3 && css3support && isMobile){
+						lpslater.swipe();
+					}
 				},
 
 				fade: function() {
@@ -94,42 +98,41 @@
 							css3support = true; 
 							cssPrefix = props[i].replace('Perspective', '').toLowerCase();
 							animProp = '-' + cssPrefix + '-transform';
-							/*$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');*/
+							$slider.css('-' + cssPrefix + '-transition-property', '-' + cssPrefix + '-transform');
 							$slider.css('-' + cssPrefix + '-transition-duration', '0s');
-							$slider.css('-' + cssPrefix + '-transition-timing-function', 'ease-in-out');
+							$slider.css('-' + cssPrefix + '-transition-timing-function', 'ease-out');
 							return true;
 						}
 					}
 				},
 
 				calcs: function () {
-					$sliderItems.width($sliderParent.innerWidth()); // sets each li to initial width of container - must be first
-					/* var accum_width = 90;
-					$sliderItems.each(function() {
-						accum_width += $(this).outerWidth();
-					});
-					$slider.width(accum_width); // calculates container width to equal the sum of all its children */
+					$sliderItems.width($sliderParent.innerWidth()); // sets each li to initial width of container
 					if (!options.fade){
 						if (options.use_css3 && css3support){
+							$slider.css('-' + cssPrefix + '-transition-duration', '0s');
 							$slider.css(animProp, 'translate3d('+ $sliderItemCurrent.position().left * -1 +'px, 0, 0)'); 
 						} else { 
 							$slider.css('margin-left', ''+ $sliderItemCurrent.position().left * -1 +'px'); 
 						}
 					}
+					$slider.height($sliderItemCurrent.height());
 				},
 				
 				continuous: function () {
+					$sliderItemFirst.clone(true).insertAfter($sliderItemLast).addClass('clone').removeClass('current');
 					$sliderItemLast.clone(true).insertBefore($sliderItemFirst).addClass('clone');
-					$sliderItemFirst.clone(true).insertAfter($sliderItemLast).addClass('clone');
 					$sliderStartClone = $slider.find('li:first-child');
 					$sliderEndClone = $slider.find('li:last-child');
-					$sliderEndClone.removeClass('current');
 					$sliderItems = $slider.children('li');
 				},
 				
 				animate: function () {
 					if (!isAnimating) {
 						isAnimating = true;
+						if (options.auto_slide && slideTimer){
+							clearTimeout(slideTimer);
+						}
 						switch(animateDirection) {
 							case 'prev':
 								if (!$sliderItemFirst.hasClass('current') || options.continuous){
@@ -165,14 +168,15 @@
 								$slider.animate({marginLeft: $sliderItemCurrent.position().left * -1}, {duration: options.animateSpeed, queue: false});
 							}
 						}
-						if (differentHeights && $slider.height() != $sliderItemCurrent.height()){
-							if (options.use_css3 && css3support){
-								$slider.height($sliderItemCurrent.height());
-							} else {
-								$slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
-							}
+						if (options.bottom_nav){
+							$bottomNavItem.removeClass('current');
+							var index = (options.continuous) ? ($sliderEndClone.hasClass('current')) ? $sliderItemFirst.index() -1 : $sliderItemCurrent.index() -1 : $sliderItemCurrent.index();
+							$bottomNavItem.eq(index).addClass('current');
 						}
-						setTimeout(lpslater.after_anim, options.animateSpeed + 100);						
+						if ($slider.height() != $sliderItemCurrent.height()){
+							$slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
+						}
+						setTimeout(lpslater.after_anim, options.animateSpeed + 100);
 					}
 					if (options.auto_slide){
 						youtubePlaying = false;
@@ -200,35 +204,83 @@
 						}
 						$sliderItemCurrent = $slider.find('.current');
 					}
-					if (options.bottom_nav){
-						$bottomNavItem.removeClass('current');
-						var index = options.continuous ? $sliderItemCurrent.index() -1 : $sliderItemCurrent.index();
-						$bottomNavItem.eq(index).addClass('current');
-					}
 					isAnimating = false;
+					if (options.auto_slide){
+						animateDirection = "next";
+						slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+					}
 				},
 				
 				auto_slide: function () {
-					var slideInterval;
-					function autoSlide() {
-						slideInterval = setInterval(function(){
-							animateDirection = 'next';
-							lpslater.animate();
-						}, options.slideChangeSpeed);
-					};
-					autoSlide();
+					animateDirection = "next";
+					slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
 					$sliderWrapper.hover(function(){
-						clearInterval(slideInterval);
+						clearTimeout(slideTimer);
 					}, function(){
-						if (!youtubePlaying){
-							autoSlide();
-						}
+						slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
 					});
-					if (youtubeExists){
-						$slider.find('iframe').hover(function(){
-							youtubePlaying = true;
-							clearInterval(slideInterval);
-						});
+				},
+				
+				swipe: function () {					
+					var sliding = startClientX = startPixelOffset = pixelOffset = currentSlide = deltaSlide = 0,
+						slideCount = $sliderItems.length;
+					
+					$slider.find('img').on('touchstart', slideStart);
+					$slider.find('img').on('touchend', slideEnd);
+					$slider.find('img').on('touchmove', slide);
+					
+					function slideStart(event) {
+						if (!isAnimating){
+							if (event.originalEvent.touches){
+								event = event.originalEvent.touches[0];
+							}
+							if (sliding == 0) {
+								sliding = 1;
+								startClientX = event.clientX;
+							}
+						}
+					}
+					
+					function slide(event) {
+						event.preventDefault();
+						if (event.originalEvent.touches) {
+							event = event.originalEvent.touches[0];
+						}
+						deltaSlide = event.clientX - startClientX;
+					
+						if (sliding == 1 && deltaSlide != 0) {
+							if (options.auto_slide && slideTimer){
+								clearTimeout(slideTimer);
+							}
+						  	sliding = 2;
+						  	startPixelOffset = pixelOffset;
+						}
+					
+						if (sliding == 2) {
+						  	pixelOffset = ($sliderItemCurrent.position().left * -1) + deltaSlide;
+						  	$slider.css('-' + cssPrefix + '-transition-duration', '0s');
+						  	$slider.css(animProp, 'translate3d(' + pixelOffset + 'px,0,0)');
+						}
+					}
+					
+					function slideEnd(event) {
+						if (sliding == 2) {
+						  	sliding = 0;
+							if (deltaSlide > 80 || deltaSlide < -80) {
+								if (deltaSlide > 80){
+									animateDirection = "prev";
+								} else if (deltaSlide < -80){
+									animateDirection = "next";
+								}
+							  	lpslater.animate();
+							} else {
+								$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
+								$slider.css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px,0,0)');
+								setTimeout(function(){
+									slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+								}, options.animateSpeed);
+							}
+						}
 					}
 				},
 				
@@ -280,18 +332,6 @@
 							'left': '0'
 						});
 					});
-				},
-				
-				slider_heights: function () {
-					$sliderItems.each(function(){
-						heightsArray.push($(this).height());
-					});
-					var smallestHeight = Math.min.apply(Math, heightsArray),
-						largestHeight = Math.max.apply(Math, heightsArray);
-					if (smallestHeight != largestHeight){
-						differentHeights = true;
-					}
-//					$slider.height(Math.min.apply(Math, heightsArray));
 				}
 			};
 			
@@ -301,10 +341,7 @@
 				if (youtubeExists){
 					lpslater.youtube_exists();
 				}
-				lpslater.slider_heights();
-				if (differentHeights){
-					$slider.height($sliderItemCurrent.height());
-				}
+				$slider.height($sliderItemCurrent.height());
 			});
 			$(window).resize(function () {
 				if (timer){
@@ -312,9 +349,6 @@
 				}
 				timer = setTimeout(function () {
 					lpslater.calcs();
-					if (differentHeights){
-						$slider.height($sliderItemCurrent.height());
-					}
 				}, 100);
 			});			
 		});
