@@ -16,6 +16,7 @@
 			bottom_nav: true, 
 			show_title: true, 
 			use_css3: false,
+			adjust_height: false, // fade sets this to true by default
 			slideChangeSpeed: 5000, 
 			animateSpeed: 500 
 		};
@@ -40,6 +41,7 @@
 				animateDirection,
 				timer,
 				youtubeExists = $slider.find('iframe').length,
+				iframe = $slider.find('iframe'),
 				youtubePlaying = false,
 				itemMinHeight,
 				heightsArray = [],
@@ -85,6 +87,7 @@
 
 				fade: function() {
 					options.continuous = options.use_css3 = false;
+					options.adjust_height = true;
 					$sliderItems.css('position', 'absolute');
 					$sliderItems.hide();
 					$sliderItemFirst.show();
@@ -116,7 +119,9 @@
 							$slider.css('margin-left', ''+ $sliderItemCurrent.position().left * -1 +'px'); 
 						}
 					}
-					$slider.height($sliderItemCurrent.height());
+					if (options.adjust_height){
+						$slider.height($sliderItemCurrent.height());
+					}
 				},
 				
 				continuous: function () {
@@ -173,7 +178,7 @@
 							var index = (options.continuous) ? ($sliderEndClone.hasClass('current')) ? $sliderItemFirst.index() -1 : $sliderItemCurrent.index() -1 : $sliderItemCurrent.index();
 							$bottomNavItem.eq(index).addClass('current');
 						}
-						if ($slider.height() != $sliderItemCurrent.height()){
+						if ($slider.height() != $sliderItemCurrent.height() && options.adjust_height){
 							$slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
 						}
 						setTimeout(lpslater.after_anim, options.animateSpeed + 100);
@@ -217,7 +222,9 @@
 					$sliderWrapper.hover(function(){
 						clearTimeout(slideTimer);
 					}, function(){
-						slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+						if (!youtubePlaying){
+							slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+						}
 					});
 				},
 				
@@ -332,6 +339,12 @@
 							'left': '0'
 						});
 					});
+					iframe.hover(function(){
+						if (slideTimer){
+							clearTimeout(slideTimer);
+						}
+						youtubePlaying = true;
+					});
 				}
 			};
 			
@@ -341,7 +354,9 @@
 				if (youtubeExists){
 					lpslater.youtube_exists();
 				}
-				$slider.height($sliderItemCurrent.height());
+				if (options.adjust_height){
+					$slider.height($sliderItemCurrent.height());
+				}
 			});
 			$(window).resize(function () {
 				if (timer){
