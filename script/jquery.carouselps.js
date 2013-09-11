@@ -15,7 +15,8 @@
 			arrow_nav: true, 
 			bottom_nav: true, 
 			show_title: true, 
-			use_css3: false,
+			use_css3: true,
+			swipe: true,
 			adjust_height: false, // fade sets this to true by default
 			slideChangeSpeed: 5000, 
 			animateSpeed: 500 
@@ -80,7 +81,7 @@
 					if (options.auto_slide){
 						lpslater.auto_slide();
 					}
-					if (options.use_css3 && css3support && isMobile){
+					if (options.swipe){
 						lpslater.swipe();
 					}
 				},
@@ -135,7 +136,7 @@
 				animate: function () {
 					if (!isAnimating) {
 						isAnimating = true;
-						if (options.auto_slide && slideTimer){
+						if (options.auto_slide){
 							clearTimeout(slideTimer);
 						}
 						switch(animateDirection) {
@@ -229,7 +230,7 @@
 				},
 				
 				swipe: function () {					
-					var sliding = startClientX = startPixelOffset = pixelOffset = currentSlide = deltaSlide = 0,
+					var sliding = startX = startXOffset = movementOffset = swipeDistance = 0,
 						slideCount = $sliderItems.length;
 					
 					$slider.find('img').on('touchstart', slideStart);
@@ -238,12 +239,15 @@
 					
 					function slideStart(event) {
 						if (!isAnimating){
+							if (options.auto_slide){
+								clearTimeout(slideTimer);
+							}
 							if (event.originalEvent.touches){
 								event = event.originalEvent.touches[0];
 							}
 							if (sliding == 0) {
 								sliding = 1;
-								startClientX = event.clientX;
+								startX = event.clientX;
 							}
 						}
 					}
@@ -253,39 +257,40 @@
 						if (event.originalEvent.touches) {
 							event = event.originalEvent.touches[0];
 						}
-						deltaSlide = event.clientX - startClientX;
+						swipeDistance = event.clientX - startX;
 					
-						if (sliding == 1 && deltaSlide != 0) {
+						if (sliding == 1 && swipeDistance != 0) {
 							if (options.auto_slide && slideTimer){
 								clearTimeout(slideTimer);
 							}
 						  	sliding = 2;
-						  	startPixelOffset = pixelOffset;
+						  	startXOffset = movementOffset;
 						}
-					
-						if (sliding == 2) {
-						  	pixelOffset = ($sliderItemCurrent.position().left * -1) + deltaSlide;
+						if (sliding == 2 && !options.fade && css3support) {
+						  	movementOffset = ($sliderItemCurrent.position().left * -1) + swipeDistance;
 						  	$slider.css('-' + cssPrefix + '-transition-duration', '0s');
-						  	$slider.css(animProp, 'translate3d(' + pixelOffset + 'px,0,0)');
+						  	$slider.css(animProp, 'translate3d(' + movementOffset + 'px,0,0)');
 						}
 					}
 					
 					function slideEnd(event) {
 						if (sliding == 2) {
 						  	sliding = 0;
-							if (deltaSlide > 80 || deltaSlide < -80) {
-								if (deltaSlide > 80){
+							if (swipeDistance > 80 || swipeDistance < -80) {
+								if (swipeDistance > 80){
 									animateDirection = "prev";
-								} else if (deltaSlide < -80){
+								} else if (swipeDistance < -80){
 									animateDirection = "next";
 								}
 							  	lpslater.animate();
 							} else {
-								$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
-								$slider.css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px,0,0)');
-								setTimeout(function(){
-									slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
-								}, options.animateSpeed);
+								if (!options.fade && css3support){
+									$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
+									$slider.css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px,0,0)');
+									setTimeout(function(){
+										slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+									}, options.animateSpeed);
+								}
 							}
 						}
 					}
