@@ -230,8 +230,7 @@
 				},
 				
 				swipe: function () {					
-					var sliding = startX = startXOffset = movementOffset = swipeDistance = 0,
-						slideCount = $sliderItems.length;
+					var sliding = startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = 0;
 					
 					$slider.find('img').on('touchstart', slideStart);
 					$slider.find('img').on('touchend', slideEnd);
@@ -248,6 +247,7 @@
 							if (sliding == 0) {
 								sliding = 1;
 								startX = event.clientX;
+								startY = event.clientY;
 							}
 						}
 					}
@@ -257,29 +257,33 @@
 						if (event.originalEvent.touches) {
 							event = event.originalEvent.touches[0];
 						}
-						swipeDistance = event.clientX - startX;
+						swipeDistanceX = event.clientX - startX;
+						swipeDistanceY = event.clientY - startY;
+						if (swipeDistanceY > 30 || swipeDistanceY < -30){
+							return true;
+						}
 					
-						if (sliding == 1 && swipeDistance != 0) {
+						if (sliding == 1 && swipeDistanceX != 0) {
 							if (options.auto_slide && slideTimer){
 								clearTimeout(slideTimer);
 							}
 						  	sliding = 2;
-						  	startXOffset = movementOffset;
+						  	startXOffset = movementXOffset;
 						}
 						if (sliding == 2 && !options.fade && css3support) {
-						  	movementOffset = ($sliderItemCurrent.position().left * -1) + swipeDistance;
+						  	movementXOffset = ($sliderItemCurrent.position().left * -1) + swipeDistanceX;
 						  	$slider.css('-' + cssPrefix + '-transition-duration', '0s');
-						  	$slider.css(animProp, 'translate3d(' + movementOffset + 'px,0,0)');
+						  	$slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
 						}
 					}
 					
 					function slideEnd(event) {
 						if (sliding == 2) {
 						  	sliding = 0;
-							if (swipeDistance > 80 || swipeDistance < -80) {
-								if (swipeDistance > 80){
+							if (swipeDistanceX > 80 || swipeDistanceX < -80) {
+								if (swipeDistanceX > 80){
 									animateDirection = "prev";
-								} else if (swipeDistance < -80){
+								} else if (swipeDistanceX < -80){
 									animateDirection = "next";
 								}
 							  	lpslater.animate();
@@ -287,10 +291,10 @@
 								if (!options.fade && css3support){
 									$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
 									$slider.css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px,0,0)');
-									setTimeout(function(){
-										slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
-									}, options.animateSpeed);
 								}
+								setTimeout(function(){
+									slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+								}, options.animateSpeed);
 							}
 						}
 					}
