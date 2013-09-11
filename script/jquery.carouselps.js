@@ -51,11 +51,11 @@
 
 			var lpslater = {
 				init: function () {
-					$slider.wrap("<div class='slider-wrapper'><div class='slider-wrap'/></div>");
-					if (!$slider.hasClass('slider')){
-						$slider.removeClass().addClass('slider');
+					$slider.wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>");
+					if (!$slider.hasClass('carouselps')){
+						$slider.removeClass().addClass('carouselps');
 					}
-					$sliderWrapper = $slider.parents('.slider-wrapper'); 
+					$sliderWrapper = $slider.parents('.carouselps-wrapper'); 
 					$sliderParent = $slider.parent();
 					$sliderItemFirst.addClass('current');
 					if (options.arrow_nav){
@@ -301,8 +301,8 @@
 				},
 				
 				arrow_nav: function () {
-					$sliderParent.append('<ul class="slider-nav"><li class="prev"><a><</a></li><li class="next"><a>></a></li></ul>');
-					$sliderBottomNavItem = $sliderParent.find('.slider-nav li');
+					$sliderParent.append('<ul class="carouselps-nav"><li class="prev"><a><</a></li><li class="next"><a>></a></li></ul>');
+					$sliderBottomNavItem = $sliderParent.find('.carouselps-nav li');
 					$sliderBottomNavItem.click(function () {
 						animateDirection = $(this).attr('class');
 						lpslater.animate();
@@ -310,8 +310,8 @@
 				},
 				
 				bottom_nav: function () {
-					$sliderWrapper.append('<ul class="slider-nav-bottom"/>');
-					$bottomNav = $sliderWrapper.find('.slider-nav-bottom');
+					$sliderWrapper.append('<ul class="carouselps-nav-bottom"/>');
+					$bottomNav = $sliderWrapper.find('.carouselps-nav-bottom');
 					$sliderItems.each(function(){
 						$bottomNav.append('<li><a/></li>');
 					});
