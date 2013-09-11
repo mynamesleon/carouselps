@@ -47,7 +47,7 @@
 				itemMinHeight,
 				heightsArray = [],
 				animProp, cssPrefix, slideTimer,
-			    isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase());
+				isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase());
 
 			var lpslater = {
 				init: function () {
