@@ -13,12 +13,11 @@
 			continuous: true, 
 			auto_slide: true, 
 			arrow_nav: true, 
-			bottom_nav: true, 
-			show_title: true, 
+			bottom_nav: true,
 			use_css3: true,
 			swipe: true,
 			adjust_height: false, // fade sets this to true by default
-			slideChangeSpeed: 5000, 
+			slideChangeSpeed: 7000, 
 			animateSpeed: 500 
 		};
 			
@@ -48,7 +47,7 @@
 				animProp, cssPrefix, slideTimer,
 				isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase());
 
-			var lpslater = {
+			var carouselps = {
 				init: function () {
 					$slider.wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>");
 					if (!$slider.hasClass('carouselps')){
@@ -58,30 +57,27 @@
 					$sliderParent = $slider.parent();
 					$sliderItemFirst.addClass('current');
 					if (options.arrow_nav){
-						lpslater.arrow_nav();
+						carouselps.arrow_nav();
 					}
 					if (options.bottom_nav) {
-						lpslater.bottom_nav();
-					}
-					if (options.show_title){
-						lpslater.show_title();
+						carouselps.bottom_nav();
 					}
 					if (options.fade){
-						lpslater.fade();
+						carouselps.fade();
 					}
 					if (options.continuous){
-						lpslater.continuous();
+						carouselps.continuous();
 					}
 					$sliderItemCurrent = $slider.find('.current');
 					if (options.use_css3){
-						lpslater.use_css3();
+						carouselps.use_css3();
 					}
-					lpslater.calcs();
+					carouselps.calcs();
 					if (options.auto_slide){
-						lpslater.auto_slide();
+						carouselps.auto_slide();
 					}
 					if (options.swipe){
-						lpslater.swipe();
+						carouselps.swipe();
 					}
 				},
 
@@ -181,7 +177,7 @@
 						if ($slider.height() != $sliderItemCurrent.height() && options.adjust_height){
 							$slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
 						}
-						setTimeout(lpslater.after_anim, options.animateSpeed + 100);
+						setTimeout(carouselps.after_anim, options.animateSpeed + 100);
 					}
 					if (options.auto_slide){
 						youtubePlaying = false;
@@ -212,18 +208,19 @@
 					isAnimating = false;
 					if (options.auto_slide){
 						animateDirection = "next";
-						slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+						slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
 					}
 				},
 				
 				auto_slide: function () {
 					animateDirection = "next";
-					slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+					slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
 					$sliderWrapper.hover(function(){
 						clearTimeout(slideTimer);
 					}, function(){
 						if (!youtubePlaying){
-							slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
+							animateDirection = "next";
+							slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
 						}
 					});
 				},
@@ -231,15 +228,14 @@
 				swipe: function () {					
 					var sliding = startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = 0;
 					
-					$slider.find('img').on('touchstart', slideStart);
-					$slider.find('img').on('touchend', slideEnd);
-					$slider.find('img').on('touchmove', slide);
+					$slider.find('img').on({
+						touchstart: slideStart,
+						touchend: slideEnd,
+						touchmove: slide
+					});
 					
 					function slideStart(event) {
 						if (!isAnimating){
-							if (options.auto_slide){
-								clearTimeout(slideTimer);
-							}
 							if (event.originalEvent.touches){
 								event = event.originalEvent.touches[0];
 							}
@@ -258,12 +254,9 @@
 						}
 						swipeDistanceX = event.clientX - startX;
 						swipeDistanceY = event.clientY - startY;
-						if (swipeDistanceY > 30 || swipeDistanceY < -30){
-							return true;
-						}
 					
 						if (sliding == 1 && swipeDistanceX != 0) {
-							if (options.auto_slide && slideTimer){
+							if (options.auto_slide){
 								clearTimeout(slideTimer);
 							}
 						  	sliding = 2;
@@ -285,15 +278,16 @@
 								} else if (swipeDistanceX < -80){
 									animateDirection = "next";
 								}
-							  	lpslater.animate();
+							  	carouselps.animate();
 							} else {
 								if (!options.fade && css3support){
 									$slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
 									$slider.css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px,0,0)');
 								}
-								setTimeout(function(){
-									slideTimer = setTimeout(lpslater.animate, options.slideChangeSpeed);
-								}, options.animateSpeed);
+								if (options.auto_slide){
+									animateDirection = "next";
+									slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
+								}
 							}
 						}
 					}
@@ -304,7 +298,7 @@
 					$sliderBottomNavItem = $sliderParent.find('.carouselps-nav li');
 					$sliderBottomNavItem.click(function () {
 						animateDirection = $(this).attr('class');
-						lpslater.animate();
+						carouselps.animate();
 					});
 				},
 				
@@ -319,19 +313,8 @@
 					$bottomNavItem.click(function(){
 						bottomNavClickIndex = parseInt($(this).index());
 						animateDirection = "bottom";
-						lpslater.animate();
+						carouselps.animate();
 					});	
-				},
-				
-				show_title: function () {
-					$sliderItems.each(function(){
-						var titleText = $(this).attr('title');
-						if (!titleText == ''){
-							$(this).append('<span class="title"></span>');
-							$(this).find('.title').text(titleText);
-							$(this).removeAttr('title');
-						}
-					});			
 				},
 				
 				youtube_exists: function () {
@@ -356,14 +339,14 @@
 				}
 			};
 			
-			lpslater.init();
+			carouselps.init();
 			
 			var timer,
 				resizeEvent = window.hasOwnProperty('orientation') && isMobile ? 'orientationchange' : 'resize';
 			
 			$(window).bind('load', function () {
 				if (youtubeExists){
-					lpslater.youtube_exists();
+					carouselps.youtube_exists();
 				}
 				if (options.adjust_height){
 					$slider.height($sliderItemCurrent.height());
@@ -373,7 +356,7 @@
 					clearTimeout(timer);
 				}
 				timer = setTimeout(function () {
-					lpslater.calcs();
+					carouselps.calcs();
 				}, 100);
 			});			
 		});
