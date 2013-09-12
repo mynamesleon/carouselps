@@ -40,7 +40,6 @@
 				bottomNavClickIndex,
 				isAnimating = css3support = false,
 				animateDirection,
-				timer,
 				youtubeExists = $slider.find('iframe').length,
 				iframe = $slider.find('iframe'),
 				youtubePlaying = false,
@@ -359,15 +358,17 @@
 			
 			lpslater.init();
 			
-			$(window).load(function () {
+			var timer,
+				resizeEvent = window.hasOwnProperty('orientation') && isMobile ? 'orientationchange' : 'resize';
+			
+			$(window).bind('load', function () {
 				if (youtubeExists){
 					lpslater.youtube_exists();
 				}
 				if (options.adjust_height){
 					$slider.height($sliderItemCurrent.height());
 				}
-			});
-			$(window).resize(function () {
+			}).bind(resizeEvent, function () {
 				if (timer){
 					clearTimeout(timer);
 				}
