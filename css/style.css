@@ -14,11 +14,6 @@ body { font-family: sans-serif; }
 .carouselps { list-style: none; padding: 0; margin: 0; position: relative; overflow: hidden; width: 99999px;}
 	.carouselps li { padding: 0; margin: 0; display: inline-block; float:left; position: relative;margin-right: 5px;}
 		.carouselps li img {width: 100%; }
-		.carouselps li .centred {text-align: center; width: 100%; background: black;}
-		.carouselps li .video-wrapper {position: relative; height: 0; padding: 0; margin: 0;}
-		.carouselps li span.title {bottom: 3px; font-family: 'Noto Serif', serif; font-size: 0.9em; color: white; font-weight: bold; position: absolute; left: 0; width: 90%; padding: 25px 5%; background: #a5a5a5; background: rgba(0,0,0,0.3); box-shadow: 0 -3px 0 rgba(255,255,255,0.1); line-height: 1.45em; -webkit-transition: all 0.3s ease; opacity: 0; filter: alpha(opacity=0);}
-		.carouselps li:hover span.title { bottom: 3px; display: inline; opacity: 1; filter: alpha(opacity=100);}
-		.carouselps li .centred {text-align: center; width: 100%; background: black;}
 
 .carouselps-nav { position: absolute; top: 0; right: 5px; }
 	.carouselps-nav li { display: inline; padding: 3px 10px; margin-right: 5px; background: #f7fcf6; color: grey; cursor: pointer; box-shadow: 0 0 6px rgba(0,0,0,0.5); font-weight: 900;}
