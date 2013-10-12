@@ -45,7 +45,7 @@
 				youtubePlaying = false,
 				itemMinHeight,
 				heightsArray = [],
-				animProp, cssPrefix, slideTimer;
+				animProp, cssPrefix, slideTimer, afterAnimTimer;
 
             var carouselps = {
                 init: function () {
@@ -177,7 +177,10 @@
                         if ($slider.height() != $sliderItemCurrent.height() && options.adjust_height) {
                             $slider.animate({ height: $sliderItemCurrent.height() }, { duration: options.animateSpeed, queue: false });
                         }
-                        setTimeout(carouselps.after_anim, options.animateSpeed + 100);
+						if (afterAnimTimer){
+							clearTimeout(afterAnimTimer);
+						}
+                        afterAnimTimer = setTimeout(carouselps.after_anim, options.animateSpeed + 100);
                     }
                     if (options.auto_slide) {
                         youtubePlaying = false;
