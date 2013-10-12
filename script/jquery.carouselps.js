@@ -228,11 +228,10 @@
                 swipe: function () {
                     var startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = dx = dy = null,
 						sliding = 0, scrolling;
-
                     $slider.on('touchstart', slideStart);
-
                     function slideStart(event) {
                         if (!isAnimating) {
+							varReset();
                             if (event.originalEvent.touches) {
                                 event = event.originalEvent.touches[0];
                             }
@@ -248,14 +247,12 @@
 							});
                         }
                     }
-
                     function slide(event) {
 						if (scrolling){
 							dx = event.originalEvent.touches[0].clientX - startX;
 							dy = event.originalEvent.touches[0].clientY - startY;
 							scrolling = Math.abs(dx) < Math.abs(dy);
-						}
-						
+						}	
 						if (!scrolling){
 							event.preventDefault();
 							if (event.originalEvent.touches) {
@@ -272,13 +269,12 @@
 								startXOffset = movementXOffset;
 							}
 							if (sliding == 2 && !options.fade && css3support) {
-								movementXOffset = ($sliderItemCurrent.position().left * -1) + (swipeDistanceX / 2);
+								movementXOffset = ($sliderItemCurrent.position().left * -1) + swipeDistanceX;
 								$slider.css('-' + cssPrefix + '-transition-duration', '0s');
 								$slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
 							}
 						}
                     }
-
                     function slideEnd(event) {
                         if (sliding == 2) {
                             if (swipeDistanceX > 80 || swipeDistanceX < -80) {
@@ -300,10 +296,13 @@
                             }
                         }
 						$slider.off('touchmove, touchend');
+						varReset();
+                    }
+					function varReset() {
 						startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = dx = dy = null;
 						sliding = 0; 
 						scrolling = true;
-                    }
+					}
                 },
 
                 arrow_nav: function () {
