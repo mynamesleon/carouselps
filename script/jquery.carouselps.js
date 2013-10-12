@@ -226,13 +226,10 @@
                 },
 
                 swipe: function () {
-                    var sliding = startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = 0;
+                    var startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = dx = dy = null,
+						sliding = 0, scrolling;
 
-                    $slider.find('img').on({
-                        touchstart: slideStart,
-                        touchend: slideEnd,
-                        touchmove: slide
-                    });
+                    $slider.on('touchstart', slideStart);
 
                     function slideStart(event) {
                         if (!isAnimating) {
@@ -241,37 +238,49 @@
                             }
                             if (sliding == 0) {
                                 sliding = 1;
+								scrolling = true;
                                 startX = event.clientX;
                                 startY = event.clientY;
                             }
+							$slider.on({
+								touchend: slideEnd,
+								touchmove: slide
+							});
                         }
                     }
 
                     function slide(event) {
-                        event.preventDefault();
-                        if (event.originalEvent.touches) {
-                            event = event.originalEvent.touches[0];
-                        }
-                        swipeDistanceX = event.clientX - startX;
-                        swipeDistanceY = event.clientY - startY;
-
-                        if (sliding == 1 && swipeDistanceX != 0) {
-                            if (options.auto_slide) {
-                                clearTimeout(slideTimer);
-                            }
-                            sliding = 2;
-                            startXOffset = movementXOffset;
-                        }
-                        if (sliding == 2 && !options.fade && css3support) {
-                            movementXOffset = ($sliderItemCurrent.position().left * -1) + swipeDistanceX;
-                            $slider.css('-' + cssPrefix + '-transition-duration', '0s');
-                            $slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
-                        }
+						if (scrolling){
+							dx = event.originalEvent.touches[0].clientX - startX;
+							dy = event.originalEvent.touches[0].clientY - startY;
+							scrolling = Math.abs(dx) < Math.abs(dy);
+						}
+						
+						if (!scrolling){
+							event.preventDefault();
+							if (event.originalEvent.touches) {
+								event = event.originalEvent.touches[0];
+							}
+							swipeDistanceX = event.clientX - startX;
+							swipeDistanceY = event.clientY - startY;
+	
+							if (sliding == 1 && swipeDistanceX != 0) {
+								if (options.auto_slide) {
+									clearTimeout(slideTimer);
+								}
+								sliding = 2;
+								startXOffset = movementXOffset;
+							}
+							if (sliding == 2 && !options.fade && css3support) {
+								movementXOffset = ($sliderItemCurrent.position().left * -1) + (swipeDistanceX / 2);
+								$slider.css('-' + cssPrefix + '-transition-duration', '0s');
+								$slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
+							}
+						}
                     }
 
                     function slideEnd(event) {
                         if (sliding == 2) {
-                            sliding = 0;
                             if (swipeDistanceX > 80 || swipeDistanceX < -80) {
                                 if (swipeDistanceX > 80) {
                                     animateDirection = "prev";
@@ -290,6 +299,10 @@
                                 }
                             }
                         }
+						$slider.off('touchmove, touchend');
+						startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = dx = dy = null;
+						sliding = 0; 
+						scrolling = true;
                     }
                 },
 
@@ -353,7 +366,8 @@
 			if (options.responsive){
 				var timer,
 					isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase()),
-					resizeEvent = window.hasOwnProperty('orientation') && isMobile ? 'orientationchange' : 'resize';
+                    orientationSupport = isMobile ? window.hasOwnProperty('orientation') : false,
+					resizeEvent = orientationSupport ? 'orientationchange' : 'resize';
 					
 				$(window).bind(resizeEvent, function () {
 					if (timer) {
