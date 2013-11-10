@@ -16,7 +16,7 @@ body { font-family: sans-serif; }
 		.carouselps li img {width: 100%; }
 
 .carouselps-nav { position: absolute; top: 0; right: 5px; }
-	.carouselps-nav li { display: inline; padding: 3px 10px; margin-right: 5px; background: #f7fcf6; color: grey; cursor: pointer; box-shadow: 0 0 6px rgba(0,0,0,0.5); font-weight: 900;}
+	.carouselps-nav li { display: inline; padding: 3px 10px; margin: 0; background: #f7fcf6; color: grey; cursor: pointer; box-shadow: 0 0 6px rgba(0,0,0,0.5); font-weight: 900;}
 
 .carouselps-nav-bottom { width: 100%; text-align: center; clear: both; position: relative; margin: 10px 0 0 0; padding-left: 0; list-style: none; }
 	.carouselps-nav-bottom li {display: inline; margin: 0 3px; cursor: pointer;}

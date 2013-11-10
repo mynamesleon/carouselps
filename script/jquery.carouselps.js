@@ -12,6 +12,7 @@
             fade: false, // if true, will set continuous and use_css3 to false
             continuous: true,
             auto_slide: true,
+            auto_direction: 'next', // 'next' or 'prev'
             arrow_nav: true,
             bottom_nav: true,
             use_css3: true,
@@ -131,9 +132,6 @@
                 animate: function () {
                     if (!isAnimating) {
                         isAnimating = true;
-                        if (options.auto_slide) {
-                            clearTimeout(slideTimer);
-                        }
                         switch (animateDirection) {
                             case 'prev':
                                 if (!$sliderItemFirst.hasClass('current') || options.continuous) {
@@ -210,16 +208,18 @@
                     }
                     isAnimating = false;
                     if (options.auto_slide) {
-                        animateDirection = "next";
-                        slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
+                        clearTimeout(slideTimer);
+                        carouselps.auto_slide();
                     }
                 },
 
                 auto_slide: function () {
-                    animateDirection = "next";
+                    animateDirection = options.auto_direction;
                     slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
-                    $sliderWrapper.hover(function () {
-                        clearTimeout(slideTimer);
+                    $sliderWrapper.unbind('hover').hover(function () {
+                        if (slideTimer){
+                            clearTimeout(slideTimer);
+                        }
                     }, function () {
                         if (!youtubePlaying) {
                             animateDirection = "next";
@@ -229,49 +229,37 @@
                 },
 
                 swipe: function () {
-                    var startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = dx = dy = null,
-						sliding = 0, scrolling;
-                    $slider.on('touchstart', slideStart);
+                    var startX = startY = movementXOffset = movementYOffset = swipeDistanceX = swipeDistanceY = null,
+						sliding = 0, scrolling = true;
+                    $slider.on({
+                        touchstart: slideStart,
+                        touchmove: slide,
+                        touchend: slideEnd
+                    });
                     function slideStart(event) {
-                        if (!isAnimating) {
+                        if ((!event.originalEvent.touches[1]) && (!isAnimating)) {
 							varReset();
-                            if (event.originalEvent.touches) {
-                                event = event.originalEvent.touches[0];
-                            }
                             if (sliding == 0) {
                                 sliding = 1;
 								scrolling = true;
-                                startX = event.clientX;
-                                startY = event.clientY;
+                                startX = event.originalEvent.touches[0].clientX;
+                                startY = event.originalEvent.touches[0].clientY;
                             }
-							$slider.on({
-								touchend: slideEnd,
-								touchmove: slide
-							});
                         }
                     }
                     function slide(event) {
-						if (scrolling){
-							dx = event.originalEvent.touches[0].clientX - startX;
-							dy = event.originalEvent.touches[0].clientY - startY;
-							scrolling = Math.abs(dx) < Math.abs(dy);
-						}	
+						
+						swipeDistanceX = event.originalEvent.touches[0].clientX - startX;
+						swipeDistanceY = event.originalEvent.touches[0].clientY - startY;
+						scrolling = Math.abs(swipeDistanceX) < Math.abs(swipeDistanceY);
+							
 						if (!scrolling){
 							event.preventDefault();
-							if (event.originalEvent.touches) {
-								event = event.originalEvent.touches[0];
+							if (options.auto_slide) {
+								clearTimeout(slideTimer);
 							}
-							swipeDistanceX = event.clientX - startX;
-							swipeDistanceY = event.clientY - startY;
-	
-							if (sliding == 1 && swipeDistanceX != 0) {
-								if (options.auto_slide) {
-									clearTimeout(slideTimer);
-								}
-								sliding = 2;
-								startXOffset = movementXOffset;
-							}
-							if (sliding == 2 && !options.fade && css3support) {
+							sliding = 2;
+							if (css3support) {
 								movementXOffset = ($sliderItemCurrent.position().left * -1) + swipeDistanceX;
 								$slider.css('-' + cssPrefix + '-transition-duration', '0s');
 								$slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
@@ -280,29 +268,18 @@
                     }
                     function slideEnd(event) {
                         if (sliding == 2) {
-                            if (swipeDistanceX > 80 || swipeDistanceX < -80) {
-                                if (swipeDistanceX > 80) {
-                                    animateDirection = "prev";
-                                } else if (swipeDistanceX < -80) {
-                                    animateDirection = "next";
-                                }
-                                carouselps.animate();
+                            if (swipeDistanceX > 80) {
+                                animateDirection = "prev";
+                            } else if (swipeDistanceX < -80) {
+                                animateDirection = "next";
                             } else {
-                                if (!options.fade && css3support) {
-                                    $slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
-                                    $slider.css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px,0,0)');
-                                }
-                                if (options.auto_slide) {
-                                    animateDirection = "next";
-                                    slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
-                                }
+                                animateDirection = null;
                             }
+                            carouselps.animate();
                         }
-						$slider.off('touchmove, touchend');
-						varReset();
                     }
 					function varReset() {
-						startX = startY = startXOffset = movementXOffset = startYOffset = movementYOffset = swipeDistanceX = swipeDistanceY = dx = dy = null;
+						startX = startY = movementXOffset = movementYOffset = swipeDistanceX = swipeDistanceY = null;
 						sliding = 0; 
 						scrolling = true;
 					}
