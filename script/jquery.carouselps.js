@@ -46,7 +46,7 @@
 				youtubePlaying = false,
 				itemMinHeight,
 				heightsArray = [],
-				animProp, cssPrefix, slideTimer, afterAnimTimer;
+				animProp, cssPrefix, slideTimer;
 
             var carouselps = {
                 init: function () {
@@ -159,12 +159,19 @@
                         if (options.use_css3 && css3support) {
                             $slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's');
                             $slider.css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px, 0, 0)');
+							$slider.one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', function(){
+								carouselps.after_anim();
+							});
                         } else {
                             if (options.fade) {
                                 $sliderItems.fadeOut(options.animateSpeed);
-                                $sliderItemCurrent.fadeIn(options.animateSpeed);
+                                $sliderItemCurrent.fadeIn(options.animateSpeed, function(){
+									carouselps.after_anim();
+								});
                             } else {
-                                $slider.animate({ marginLeft: $sliderItemCurrent.position().left * -1 }, { duration: options.animateSpeed, queue: false });
+                                $slider.animate({ marginLeft: $sliderItemCurrent.position().left * -1 }, options.animateSpeed, function(){
+									carouselps.after_anim();
+								});
                             }
                         }
                         if (options.bottom_nav) {
@@ -175,10 +182,6 @@
                         if ($slider.height() != $sliderItemCurrent.height() && options.adjust_height) {
                             $slider.animate({ height: $sliderItemCurrent.height() }, { duration: options.animateSpeed, queue: false });
                         }
-						if (afterAnimTimer){
-							clearTimeout(afterAnimTimer);
-						}
-                        afterAnimTimer = setTimeout(carouselps.after_anim, options.animateSpeed + 100);
                     }
                     if (options.auto_slide) {
                         youtubePlaying = false;

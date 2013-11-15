@@ -9,10 +9,11 @@
 		$(document).ready(function(){
 			$('.boom').carouselps({
 				continuous: true,
-                fade: false,
+                fade: true,
 				use_css3: true,
 				slideChangeSpeed: 2000, 
-				animateSpeed: 500 
+				animateSpeed: 500,
+				adjust_height: true
 			});
 		});
 	</script>
@@ -21,7 +22,7 @@
 <body>
 <p>
     <ul class="boom">
-        <li><img src="../responsiveCarousel/images/slide1.png" /></li>
+        <li><img src="../responsiveCarousel/images/slide1.png" /><img src="../responsiveCarousel/images/slide1.png" /></li>
         <li><img src="../responsiveCarousel/images/slide2.png" /></li>
         <li><img src="../responsiveCarousel/images/slide3.png" /></li>
         <li><img src="../responsiveCarousel/images/slide4.png" /></li>
