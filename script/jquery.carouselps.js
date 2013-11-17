@@ -2,25 +2,27 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~                   Carousel Plugin                   ~~
 ~~           Leon Slater, www.lpslater.co.uk           ~~
-~~                    Version 1.0.0                    ~~
+~~                    Version 1.1.0                    ~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 (function ($) {
     $.fn.carouselps = function (options) {
 
         var defaults = {
-            fade: false,              // use fade or slide transition mode: if true, will set continuous and use_css3 to false
-            continuous: true,         // determines whether the slide loop is continuous
-            auto_slide: true,         // whether or not the carousel will animate automatically
-            auto_direction: 'next',   // auto-animate direction: 'next' or 'prev'
-            arrow_nav: true,          // control whether or not arrow navigation renders
-            bottom_nav: true,         // control whether or not bottom navigation renders
-            use_css3: true,           // if supported, control whether or not the slide transitions use the translate3d css3 property
-            swipe: true,              // enable/disable touch swipe capability
-            responsive: true,         // determine if the slides should alter width on resize - their width is set to the slider's parent width
-            adjust_height: true,      // whether or not the slider should adjust height based on the active slide: fade sets this to true by default
-            slideChangeSpeed: 2500,   // the time interval between the carousel's auto-animations
-            animateSpeed: 500         // the animation speed between slides
+            fade: false, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
+            continuous: true, // determines whether the slide loop is continuous
+            auto_slide: true, // whether or not the carousel will animate automatically
+            auto_direction: 'next', // auto-animate direction: 'next' or 'prev'
+            arrow_nav: true, // control whether or not arrow navigation renders
+            bottom_nav: true, // control whether or not bottom navigation renders
+            use_css3: true, // if supported, control whether or not the slide transitions use the translate3d css3 property
+            swipe: true, // enable/disable touch swipe capability
+            responsive: true, // determine if the slides should alter width on resize - their width is set to the slider's parent width
+            adjust_height: true, // whether or not the slider should adjust height based on the active slide: fade sets this to true by default
+            slideChangeSpeed: 2500, // the time interval between the carousel's auto-animations
+            animateSpeed: 500, // the animation speed between slides
+            load_callback: function() {},
+            slide_callback: function() {}
         };
 
         options = $.extend({}, defaults, options);
@@ -40,7 +42,7 @@
                 $bottomNavItem,
                 bottomNavClickIndex,
                 isAnimating = false,
-				css3support = false,
+                css3support = false,
                 animateDirection,
                 youtubePlaying = false,
                 hovering = false,
@@ -81,6 +83,7 @@
                     if (options.swipe) {
                         carouselps.swipe();
                     }
+                    options.load_callback.call(this);
                 },
 
                 fade: function () {
@@ -98,7 +101,7 @@
                         if (div.style[props[i]] != undefined) {
                             css3support = true;
                             cssPrefix = props[i].replace('Perspective', '').toLowerCase();
-                            animProp = '-' + cssPrefix + '-transform';							
+                            animProp = '-' + cssPrefix + '-transform';
                             $slider.css('-' + cssPrefix + '-transition', '-' + cssPrefix + '-transform 0s ease-out');
                             return true;
                         }
@@ -128,52 +131,56 @@
                     $sliderItems = $slider.children('li');
                 },
 
+                before_anim: function() {
+                    $sliderItemCurrent.removeClass('current');
+                    switch (animateDirection) {
+                    case 'prev':
+                        if (!$sliderItemFirst.hasClass('current') || options.continuous) {
+                            $sliderItemCurrent.prev().addClass('current');
+                        } else {
+                            $sliderItemLast.addClass('current');
+                        }
+                        break;
+                    case 'next':
+                        if (!$sliderItemLast.hasClass('current') || options.continuous) {
+                            $sliderItemCurrent.next().addClass('current');
+                        } else {
+                            $sliderItemFirst.addClass('current');
+                        }
+                        break;
+                    case 'bottom':
+                        var index = options.continuous ? bottomNavClickIndex + 1 : bottomNavClickIndex;
+                        $sliderItems.eq(index).addClass("current");
+                        break;
+                    }
+                    $sliderItemCurrent = $slider.find('.current');
+                },
+
                 animate: function () {
                     if (!isAnimating) {
                         isAnimating = true;
-                        switch (animateDirection) {
-                            case 'prev':
-                                if (!$sliderItemFirst.hasClass('current') || options.continuous) {
-                                    $sliderItemCurrent.removeClass('current').prev().addClass('current');
-                                } else {
-                                    $sliderItemCurrent.removeClass('current');
-                                    $sliderItemLast.addClass('current');
-                                }
-                                break;
-                            case 'next':
-                                if (!$sliderItemLast.hasClass('current') || options.continuous) {
-                                    $sliderItemCurrent.removeClass('current').next().addClass('current');
-                                } else {
-                                    $sliderItemCurrent.removeClass('current');
-                                    $sliderItemFirst.addClass('current');
-                                }
-                                break;
-                            case 'bottom':
-                                $sliderItemCurrent.removeClass('current');
-                                var index = options.continuous ? bottomNavClickIndex + 1 : bottomNavClickIndex;
-                                $sliderItems.eq(index).addClass("current");
-                                break;
-                        }
-                        $sliderItemCurrent = $slider.find('.current');
+                        carouselps.before_anim();
                         if (options.use_css3 && css3support) {
                             $slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's')
-                               .css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px, 0, 0)')
-                               .one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', carouselps.after_anim);
+                                .css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px, 0, 0)')
+                                .one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', carouselps.after_anim);
                         } else {
                             if (options.fade) {
                                 $sliderItems.fadeOut(options.animateSpeed);
                                 $sliderItemCurrent.fadeIn(options.animateSpeed, carouselps.after_anim);
                             } else {
-                                $slider.animate({ marginLeft: $sliderItemCurrent.position().left * -1 }, options.animateSpeed, carouselps.after_anim);
+                                $slider.animate({
+                                    marginLeft: $sliderItemCurrent.position().left * -1
+                                }, options.animateSpeed, carouselps.after_anim);
                             }
                         }
                         if (options.bottom_nav) {
                             $bottomNavItem.removeClass('current');
-                            var index = (options.continuous) ? ($sliderEndClone.hasClass('current')) ? $sliderItemFirst.index() - 1 : $sliderItemCurrent.index() - 1 : $sliderItemCurrent.index();
-                            $bottomNavItem.eq(index).addClass('current');
+                            var bottomIndex = (options.continuous) ? ($sliderEndClone.hasClass('current')) ? $sliderItemFirst.index() - 1 : $sliderItemCurrent.index() - 1 : $sliderItemCurrent.index();
+                            $bottomNavItem.eq(bottomIndex).addClass('current');
                         }
                         if ($slider.height() != $sliderItemCurrent.height() && options.adjust_height) {
-                            $slider.animate({ height: $sliderItemCurrent.height() }, { duration: options.animateSpeed, queue: false });
+                            $slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
                         }
                     }
                     if (options.auto_slide) {
@@ -202,13 +209,14 @@
                         }
                         $sliderItemCurrent = $slider.find('.current');
                     }
+                    options.slide_callback.call(this);
                     isAnimating = false;
                     if (options.auto_slide && !hovering) {
-	                    if (slideTimer){
+                        if (slideTimer) {
                             clearTimeout(slideTimer);
                         }
                         animateDirection = options.auto_direction;
-	                    slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
+                        slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
                     }
                 },
 
@@ -216,12 +224,12 @@
                     animateDirection = options.auto_direction;
                     slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
                     $sliderWrapper.hover(function () {
-						hovering = true;
-                        if (slideTimer){
+                        hovering = true;
+                        if (slideTimer) {
                             clearTimeout(slideTimer);
                         }
                     }, function () {
-						hovering = false;
+                        hovering = false;
                         if (!youtubePlaying) {
                             animateDirection = options.auto_direction;
                             slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
@@ -230,13 +238,20 @@
                 },
 
                 swipe: function () {
-                    var startX = null, startY = null, movementXOffset = null, movementYOffset = null, swipeDistanceX = null, swipeDistanceY = null,
-                        sliding = 0, scrolling = true;
+                    var startX = null,
+                        startY = null,
+                        movementXOffset = null,
+                        movementYOffset = null,
+                        swipeDistanceX = null,
+                        swipeDistanceY = null,
+                        sliding = 0,
+                        scrolling = true;
                     $slider.on({
                         touchstart: slideStart,
                         touchmove: slide,
                         touchend: slideEnd
                     });
+
                     function slideStart(event) {
                         if ((!event.originalEvent.touches[1]) && (!isAnimating)) {
                             varReset();
@@ -247,12 +262,13 @@
                             }
                         }
                     }
+
                     function slide(event) {
                         swipeDistanceX = event.originalEvent.touches[0].clientX - startX;
                         swipeDistanceY = event.originalEvent.touches[0].clientY - startY;
                         scrolling = Math.abs(swipeDistanceX) < Math.abs(swipeDistanceY);
-							
-                        if (!scrolling){
+
+                        if (!scrolling) {
                             event.preventDefault();
                             if (options.auto_slide) {
                                 clearTimeout(slideTimer);
@@ -265,6 +281,7 @@
                             }
                         }
                     }
+
                     function slideEnd(event) {
                         if (sliding == 2) {
                             if (swipeDistanceX > 80) {
@@ -277,6 +294,7 @@
                             carouselps.animate();
                         }
                     }
+
                     function varReset() {
                         startX = null, startY = null, movementXOffset = null, movementYOffset = null, swipeDistanceX = null, swipeDistanceY = null,
                         sliding = 0, scrolling = true;
@@ -293,9 +311,7 @@
                 },
 
                 bottom_nav: function () {
-                    if (!$sliderWrapper.find('.carouselps-nav-bottom').length){
-                        $sliderWrapper.append('<ul class="carouselps-nav-bottom"/>');
-                    }
+                    $sliderWrapper.append('<ul class="carouselps-nav-bottom"/>');
                     $bottomNav = $sliderWrapper.find('.carouselps-nav-bottom');
                     $sliderItems.each(function () {
                         $bottomNav.append('<li><a></a></li>');
@@ -314,16 +330,22 @@
                     $iframes.each(function () {
                         var $iframe = $(this);
                         if ($iframe.attr('src').toLowerCase().indexOf('youtube') > -1) {
-                            var itemWidth = !isNaN(parseInt($iframe.attr('width'), 10)) ? 
-                                    parseInt($iframe.attr('width'), 10) : $iframe.width(),
-                                itemHeight = (this.tagName.toLowerCase() === 'object' || 
+                            var itemWidth = !isNaN(parseInt($iframe.attr('width'), 10)) ?
+                                parseInt($iframe.attr('width'), 10) : $iframe.width(),
+                                itemHeight = (this.tagName.toLowerCase() === 'object' ||
                                     ($iframe.attr('height') && !isNaN(parseInt($iframe.attr('height'), 10)))) ?
                                     parseInt($iframe.attr('height'), 10) : $iframe.height(),
                                 aspectRatio = (itemHeight / itemWidth) * 100 + "%";
 
                             $iframe.removeAttr('width').removeAttr('height')
                                 .wrap("<div class='video-wrapper' style='padding-bottom: " + aspectRatio + "' />")
-                                .css({'position': 'absolute', 'height': '100%', 'width': '100%', 'top': '0', 'left': '0'});
+                                .css({
+                                    'position': 'absolute',
+                                    'height': '100%',
+                                    'width': '100%',
+                                    'top': '0',
+                                    'left': '0'
+                                });
                         }
                     });
                     $iframes.hover(function () {
@@ -345,8 +367,8 @@
                     $slider.height($sliderItemCurrent.height());
                 }
             });
-			
-            if (options.responsive){
+
+            if (options.responsive) {
                 var timer,
                     orientationSupport = isMobile ? window.hasOwnProperty('orientation') : false,
                     resizeEvent = orientationSupport ? 'orientationchange' : 'resize';
@@ -363,4 +385,4 @@
         });
 
     };
-} (jQuery));
+}(jQuery));
