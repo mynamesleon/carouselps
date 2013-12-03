@@ -6,6 +6,7 @@ body { font-family: sans-serif; }
 
 
 /* Content */
+body {-webkit-tap-highlight-color: rgba(0,0,0,0);}
 .carouselps-wrapper { width: 958px; margin-top: 10px; margin-bottom: 10px; margin: auto; border: 1px solid #eaeaea; min-height: 100%;padding: 20px; }
 .carouselps-wrapper img {border: 0; padding: 0; margin: 0; outline: 0;}
 
@@ -15,8 +16,8 @@ body { font-family: sans-serif; }
 .carouselps li { padding: 0; margin: 0; display: inline-block; float:left; position: relative;margin-right: 5px;}
 .carouselps li img {width: 100%; }
 
-.carouselps-nav { position: absolute; top: 0; right: 5px; }
-.carouselps-nav li { display: inline; padding: 3px 10px; margin: 0; background: #f7fcf6; color: grey; cursor: pointer; box-shadow: 0 0 6px rgba(0,0,0,0.5); font-weight: 900;}
+.carouselps-nav { position: absolute; top: 0; right: 5px; z-index: 100; }
+.carouselps-nav li { display: inline; padding: 3px 10px; margin: 0 1px; background: #f7fcf6; color: grey; cursor: pointer; box-shadow: 0 0 6px rgba(0,0,0,0.5); font-weight: 900;}
 
 .carouselps-nav-bottom { width: 100%; text-align: center; clear: both; position: relative; margin: 10px 0 0 0; padding-left: 0; list-style: none; }
 .carouselps-nav-bottom li {display: inline; margin: 0 3px; cursor: pointer;}

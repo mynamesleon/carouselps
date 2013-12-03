@@ -34,6 +34,7 @@
                 $sliderItemFirst = $slider.children('li:first-child'),
                 $sliderItemLast = $slider.children('li:last-child'),
                 $sliderItemCurrent = $slider.find('.current'),
+                sliderPos,
                 $sliderStartClone,
                 $sliderEndClone,
                 $sliderParent,
@@ -48,8 +49,7 @@
                 hovering = false,
                 animProp, cssPrefix, slideTimer,
                 isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase()),
-                touch = isMobile ? ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch : false,
-                clickEvent = touch ? 'touchend' : 'click';
+                touch = isMobile ? ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch : false;
 
             var carouselps = {
                 init: function () {
@@ -89,9 +89,8 @@
                 fade: function () {
                     options.continuous = options.use_css3 = false;
                     options.adjust_height = true;
-                    $sliderItems.css('position', 'absolute');
-                    $sliderItems.hide();
-                    $sliderItemFirst.show();
+                    $sliderItems.css({'position': 'absolute', 'opacity': '0', 'z-index' : '1'});
+                    $sliderItemFirst.css({'opacity': '1', 'z-index' : '2'});
                 },
 
                 use_css3: function () {
@@ -110,12 +109,13 @@
 
                 calcs: function () {
                     $sliderItems.width($sliderParent.innerWidth()); // sets each li to initial width of container
+                    sliderPos = $sliderItemCurrent.position().left * -1;
                     if (!options.fade) {
                         if (options.use_css3 && css3support) {
                             $slider.css('-' + cssPrefix + '-transition-duration', '0s');
-                            $slider.css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px, 0, 0)');
+                            $slider.css(animProp, 'translate3d(' + sliderPos + 'px, 0, 0)');
                         } else {
-                            $slider.css('margin-left', '' + $sliderItemCurrent.position().left * -1 + 'px');
+                            $slider.css('margin-left', '' + sliderPos + 'px');
                         }
                     }
                     if (options.adjust_height) {
@@ -134,25 +134,28 @@
                 before_anim: function() {
                     $sliderItemCurrent.removeClass('current');
                     switch (animateDirection) {
-                    case 'prev':
-                        if (!$sliderItemFirst.hasClass('current') || options.continuous) {
-                            $sliderItemCurrent.prev().addClass('current');
-                        } else {
-                            $sliderItemLast.addClass('current');
+                        case 'prev':
+                            if (!$sliderItemFirst.is($sliderItemCurrent) || options.continuous) {
+                                $sliderItemCurrent.prev().addClass('current');
+                            } else {
+                                $sliderItemLast.addClass('current');
+                            }
+                            break;
+                        case 'next':
+                            if (!$sliderItemLast.is($sliderItemCurrent) || options.continuous) {
+                                $sliderItemCurrent.next().addClass('current');
+                            } else {
+                                $sliderItemFirst.addClass('current');
+                            }
+                            break;
+                        case 'bottom':
+                            var index = options.continuous ? bottomNavClickIndex + 1 : bottomNavClickIndex;
+                            $sliderItems.eq(index).addClass("current");
+                            break;
+                        case 'default':
+                            $sliderItemCurrent.addClass('current');
+                            break;
                         }
-                        break;
-                    case 'next':
-                        if (!$sliderItemLast.hasClass('current') || options.continuous) {
-                            $sliderItemCurrent.next().addClass('current');
-                        } else {
-                            $sliderItemFirst.addClass('current');
-                        }
-                        break;
-                    case 'bottom':
-                        var index = options.continuous ? bottomNavClickIndex + 1 : bottomNavClickIndex;
-                        $sliderItems.eq(index).addClass("current");
-                        break;
-                    }
                     $sliderItemCurrent = $slider.find('.current');
                 },
 
@@ -160,17 +163,20 @@
                     if (!isAnimating) {
                         isAnimating = true;
                         carouselps.before_anim();
+                        sliderPos = $sliderItemCurrent.position().left * -1;
                         if (options.use_css3 && css3support) {
                             $slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's')
-                                .css(animProp, 'translate3d(' + $sliderItemCurrent.position().left * -1 + 'px, 0, 0)')
+                                .css(animProp, 'translate3d(' + sliderPos + 'px, 0, 0)')
                                 .one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', carouselps.after_anim);
                         } else {
                             if (options.fade) {
-                                $sliderItems.fadeOut(options.animateSpeed);
-                                $sliderItemCurrent.fadeIn(options.animateSpeed, carouselps.after_anim);
+                                $sliderItems.css('z-index', '1');
+                                $sliderItemCurrent.css('z-index', '2').animate({'opacity': '1'}, options.animateSpeed, function(){
+                                    carouselps.after_anim();
+                                });
                             } else {
                                 $slider.animate({
-                                    marginLeft: $sliderItemCurrent.position().left * -1
+                                    marginLeft: sliderPos
                                 }, options.animateSpeed, carouselps.after_anim);
                             }
                         }
@@ -191,12 +197,12 @@
                 after_anim: function () {
                     if (options.continuous) {
                         if ($sliderStartClone.hasClass('current') || $sliderEndClone.hasClass('current')) {
-                            var switchTo = $sliderStartClone.hasClass('current') ? $sliderItemLast.position().left * -1 : $sliderItemFirst.position().left * -1;
+                            sliderPos = $sliderStartClone.hasClass('current') ? $sliderItemLast.position().left * -1 : $sliderItemFirst.position().left * -1;
                             if (options.use_css3 && css3support) {
                                 $slider.css('-' + cssPrefix + '-transition-duration', '0s');
-                                $slider.css(animProp, 'translate3d(' + switchTo + 'px, 0, 0)');
+                                $slider.css(animProp, 'translate3d(' + sliderPos + 'px, 0, 0)');
                             } else {
-                                $slider.css('margin-left', ' ' + switchTo + 'px');
+                                $slider.css('margin-left', ' ' + sliderPos + 'px');
                             }
                             if ($sliderStartClone.hasClass('current')) {
                                 $sliderItemLast.addClass('current');
@@ -208,6 +214,9 @@
                             cloneUsed = true;
                         }
                         $sliderItemCurrent = $slider.find('.current');
+                    }
+                    if (options.fade){
+                        $sliderItems.not($sliderItemCurrent).css('opacity', '0');
                     }
                     options.slide_callback.call(this);
                     isAnimating = false;
@@ -238,46 +247,58 @@
                 },
 
                 swipe: function () {
-                    var startX = null,
-                        startY = null,
-                        movementXOffset = null,
-                        movementYOffset = null,
-                        swipeDistanceX = null,
-                        swipeDistanceY = null,
-                        sliding = 0,
-                        scrolling = true;
-                    $slider.on({
-                        touchstart: slideStart,
-                        touchmove: slide,
-                        touchend: slideEnd
-                    });
+                    var startX = 0, startY = 0, movementXOffset = 0, movementYOffset = 0, swipeDistanceX = 0, swipeDistanceY = 0,
+                        sliding = 0, scrolling = true, pointerEnabled = window.navigator.pointerEnabled, touchEvent,
+                        startTouch = pointerEnabled ? 'pointerdown' : 'touchstart',
+                        moveTouch = pointerEnabled ? 'pointermove' : 'touchmove',
+                        endTouch = pointerEnabled ? 'pointerup' : 'touchend';
+
+                    if (pointerEnabled){
+                        $slider.css('touch-action', 'pan-y');
+                    }
+
+                    
+                    $slider.on(startTouch, slideStart)
+                        .on(moveTouch, slide)
+                        .on(endTouch, slideEnd);
 
                     function slideStart(event) {
-                        if ((!event.originalEvent.touches[1]) && (!isAnimating)) {
-                            varReset();
+                        if (pointerEnabled ? !isAnimating : (!event.originalEvent.touches[1]) && (!isAnimating)) {
                             if (sliding == 0) {
                                 sliding = 1;
-                                startX = event.originalEvent.touches[0].clientX;
-                                startY = event.originalEvent.touches[0].clientY;
+                                touchEvent = pointerEnabled ? event.originalEvent : event.originalEvent.touches[0];
+                                startX = touchEvent.clientX;
+                                startY = touchEvent.clientY;
+                                $slider.css('-' + cssPrefix + '-transition-duration', '0s');
                             }
                         }
                     }
 
                     function slide(event) {
-                        swipeDistanceX = event.originalEvent.touches[0].clientX - startX;
-                        swipeDistanceY = event.originalEvent.touches[0].clientY - startY;
-                        scrolling = Math.abs(swipeDistanceX) < Math.abs(swipeDistanceY);
-
-                        if (!scrolling) {
-                            event.preventDefault();
-                            if (options.auto_slide) {
-                                clearTimeout(slideTimer);
+                        if (sliding != 0){
+                            touchEvent = pointerEnabled ? event.originalEvent : event.originalEvent.touches[0];
+                            swipeDistanceX = touchEvent.clientX - startX;
+                            swipeDistanceY = touchEvent.clientY - startY;
+                            if (sliding == 1){
+                                scrolling = Math.abs(swipeDistanceX) < Math.abs(swipeDistanceY);
                             }
-                            sliding = 2;
-                            if (css3support) {
-                                movementXOffset = ($sliderItemCurrent.position().left * -1) + swipeDistanceX;
-                                $slider.css('-' + cssPrefix + '-transition-duration', '0s')
-                                    .css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
+
+                            if (!scrolling) {
+                                event.preventDefault();
+                                if (options.auto_slide) {
+                                    clearTimeout(slideTimer);
+                                }
+                                sliding = 2;
+                                if (css3support) {
+                                    movementXOffset = sliderPos + swipeDistanceX;
+                                    $slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
+                                } else if (options.fade) {
+                                    var $sliderItemNext = swipeDistanceX > 0 ? $sliderItemCurrent.is($sliderItemFirst) ?
+                                        $sliderItemLast : $sliderItemCurrent.prev('li') :
+                                        swipeDistanceX < 0 ? $sliderItemCurrent.is($sliderItemLast) ?
+                                        $sliderItemFirst : $sliderItemCurrent.next('li') : $sliderItemCurrent;
+                                    $sliderItemNext.css({'z-index': '3', 'opacity': 0 + (Math.abs(swipeDistanceX) / $sliderParent.innerWidth()) });
+                                }
                             }
                         }
                     }
@@ -289,14 +310,15 @@
                             } else if (swipeDistanceX < -80) {
                                 animateDirection = "next";
                             } else {
-                                animateDirection = null;
+                                animateDirection = "default";
                             }
                             carouselps.animate();
+                            varReset();
                         }
                     }
 
                     function varReset() {
-                        startX = null, startY = null, movementXOffset = null, movementYOffset = null, swipeDistanceX = null, swipeDistanceY = null,
+                        startX = 0, startY = 0, movementXOffset = 0, movementYOffset = 0, swipeDistanceX = 0, swipeDistanceY = 0,
                         sliding = 0, scrolling = true;
                     }
                 },
@@ -304,7 +326,7 @@
                 arrow_nav: function () {
                     $sliderParent.append('<ul class="carouselps-nav"><li class="prev"><a><</a></li><li class="next"><a>></a></li></ul>');
                     $sliderBottomNavItem = $sliderParent.find('.carouselps-nav li');
-                    $sliderBottomNavItem.bind(clickEvent, function () {
+                    $sliderBottomNavItem.bind('click', function () {
                         animateDirection = $(this).attr('class');
                         carouselps.animate();
                     });
@@ -318,7 +340,7 @@
                     });
                     $bottomNavItem = $bottomNav.find('li');
                     $bottomNav.find('li:first-child').addClass('current');
-                    $bottomNavItem.bind(clickEvent, function () {
+                    $bottomNavItem.bind('click', function () {
                         bottomNavClickIndex = $(this).index();
                         animateDirection = "bottom";
                         carouselps.animate();
