@@ -15,12 +15,13 @@
             auto_direction: 'next', // auto-animate direction: 'next' or 'prev'
             arrow_nav: true, // control whether or not arrow navigation renders
             bottom_nav: true, // control whether or not bottom navigation renders
+            custom_bottom_nav: false, // can specify to elements replace default bottom nav, e.g. $('.bottom-nav > div') - they must all be siblings
             use_css3: true, // if supported, control whether or not the slide transitions use the translate3d css3 property
             swipe: true, // enable/disable touch swipe capability
             responsive: true, // determine if the slides should alter width on resize - their width is set to the slider's parent width
-            adjust_height: true, // whether or not the slider should adjust height based on the active slide: fade sets this to true by default
-            slideChangeSpeed: 2500, // the time interval between the carousel's auto-animations
-            animateSpeed: 500, // the animation speed between slides
+            adjust_height: false, // whether or not the slider should adjust height based on the active slide: fade sets this to true by default
+            slide_delay: 2500, // the time interval between the carousel's auto-animations
+            animate_speed: 500, // the animation speed between slides
             load_callback: function() {},
             slide_callback: function() {}
         };
@@ -53,10 +54,7 @@
 
             var carouselps = {
                 init: function () {
-                    $slider.wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>");
-                    if (!$slider.hasClass('carouselps')) {
-                        $slider.removeClass().addClass('carouselps');
-                    }
+                    $slider.addClass('carouselps').wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>");
                     $sliderWrapper = $slider.parents('.carouselps-wrapper');
                     $sliderParent = $slider.parent();
                     $sliderItemFirst.addClass('current');
@@ -83,7 +81,9 @@
                     if (options.swipe) {
                         carouselps.swipe();
                     }
-                    options.load_callback.call(this);
+                    if (typeof options.load_callback == 'function'){
+                        options.load_callback();
+                    }
                 },
 
                 fade: function () {
@@ -165,28 +165,28 @@
                         carouselps.before_anim();
                         sliderPos = $sliderItemCurrent.position().left * -1;
                         if (options.use_css3 && css3support) {
-                            $slider.css('-' + cssPrefix + '-transition-duration', options.animateSpeed / 1000 + 's')
+                            $slider.css('-' + cssPrefix + '-transition-duration', options.animate_speed / 1000 + 's')
                                 .css(animProp, 'translate3d(' + sliderPos + 'px, 0, 0)')
                                 .one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', carouselps.after_anim);
                         } else {
                             if (options.fade) {
                                 $sliderItems.css('z-index', '1');
-                                $sliderItemCurrent.css('z-index', '2').animate({'opacity': '1'}, options.animateSpeed, function(){
+                                $sliderItemCurrent.css('z-index', '2').animate({'opacity': '1'}, options.animate_speed, function(){
                                     carouselps.after_anim();
                                 });
                             } else {
                                 $slider.animate({
                                     marginLeft: sliderPos
-                                }, options.animateSpeed, carouselps.after_anim);
+                                }, options.animate_speed, carouselps.after_anim);
                             }
                         }
                         if (options.bottom_nav) {
                             $bottomNavItem.removeClass('current');
-                            var bottomIndex = (options.continuous) ? ($sliderEndClone.hasClass('current')) ? $sliderItemFirst.index() - 1 : $sliderItemCurrent.index() - 1 : $sliderItemCurrent.index();
+                            var bottomIndex = (options.continuous) ? ($sliderEndClone.hasClass('current')) ? 0 : $sliderItemCurrent.index() - 1 : $sliderItemCurrent.index();
                             $bottomNavItem.eq(bottomIndex).addClass('current');
                         }
-                        if ($slider.height() != $sliderItemCurrent.height() && options.adjust_height) {
-                            $slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animateSpeed, queue: false});
+                        if (options.adjust_height && $slider.height() != $sliderItemCurrent.height()) {
+                            $slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animate_speed, queue: false});
                         }
                     }
                     if (options.auto_slide) {
@@ -218,20 +218,22 @@
                     if (options.fade){
                         $sliderItems.not($sliderItemCurrent).css('opacity', '0');
                     }
-                    options.slide_callback.call(this);
+                    if (typeof options.slide_callback == 'function'){
+                        options.slide_callback();
+                    }
                     isAnimating = false;
                     if (options.auto_slide && !hovering) {
                         if (slideTimer) {
                             clearTimeout(slideTimer);
                         }
                         animateDirection = options.auto_direction;
-                        slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
+                        slideTimer = setTimeout(carouselps.animate, options.slide_delay);
                     }
                 },
 
                 auto_slide: function () {
                     animateDirection = options.auto_direction;
-                    slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
+                    slideTimer = setTimeout(carouselps.animate, options.slide_delay);
                     $sliderWrapper.hover(function () {
                         hovering = true;
                         if (slideTimer) {
@@ -241,42 +243,43 @@
                         hovering = false;
                         if (!youtubePlaying) {
                             animateDirection = options.auto_direction;
-                            slideTimer = setTimeout(carouselps.animate, options.slideChangeSpeed);
+                            slideTimer = setTimeout(carouselps.animate, options.slide_delay);
                         }
                     });
                 },
 
                 swipe: function () {
-                    var startX = 0, startY = 0, movementXOffset = 0, movementYOffset = 0, swipeDistanceX = 0, swipeDistanceY = 0,
-                        sliding = 0, scrolling = true, pointerEnabled = window.navigator.pointerEnabled, touchEvent,
-                        startTouch = pointerEnabled ? 'pointerdown' : 'touchstart',
-                        moveTouch = pointerEnabled ? 'pointermove' : 'touchmove',
-                        endTouch = pointerEnabled ? 'pointerup' : 'touchend';
+                    var startX = 0, startY = 0, movementXOffset = 0, movementYOffset = 0, swipeDistanceX = 0, swipeDistanceY = 0, sliding = 0, scrolling = true, 
+                        pointerEnabled = window.navigator.pointerEnabled, msPointerEnabled = window.navigator.msPointerEnabled, touchEvent,
+                        startTouch = pointerEnabled ? 'pointerdown' : msPointerEnabled ? 'MSPointerDown' : 'touchstart',
+                        moveTouch = pointerEnabled ? 'pointermove' : msPointerEnabled ? 'MSPointerMove' : 'touchmove',
+                        endTouch = pointerEnabled ? 'pointerup' : msPointerEnabled ? 'MSPointerUp' : 'touchend';
 
-                    if (pointerEnabled){
-                        $slider.css('touch-action', 'pan-y');
+                    if (pointerEnabled || msPointerEnabled){
+                        $slider.css({'touch-action': 'pan-y', 'ms-touch-action' : 'pan-y'});
                     }
 
-                    
                     $slider.on(startTouch, slideStart)
                         .on(moveTouch, slide)
                         .on(endTouch, slideEnd);
 
                     function slideStart(event) {
-                        if (pointerEnabled ? !isAnimating : (!event.originalEvent.touches[1]) && (!isAnimating)) {
-                            if (sliding == 0) {
-                                sliding = 1;
-                                touchEvent = pointerEnabled ? event.originalEvent : event.originalEvent.touches[0];
-                                startX = touchEvent.clientX;
-                                startY = touchEvent.clientY;
-                                $slider.css('-' + cssPrefix + '-transition-duration', '0s');
+                        if (!isAnimating){
+                            if (pointerEnabled ? event.originalEvent.pointerType === 'touch' : msPointerEnabled ? event.originalEvent.pointerType === 2 : !event.originalEvent.touches[1]) {
+                                if (sliding == 0) {
+                                    sliding = 1;
+                                    touchEvent = pointerEnabled || msPointerEnabled ? event.originalEvent : event.originalEvent.touches[0];
+                                    startX = touchEvent.clientX;
+                                    startY = touchEvent.clientY;
+                                    $slider.css('-' + cssPrefix + '-transition-duration', '0s');
+                                }
                             }
                         }
                     }
 
                     function slide(event) {
                         if (sliding != 0){
-                            touchEvent = pointerEnabled ? event.originalEvent : event.originalEvent.touches[0];
+                            touchEvent = pointerEnabled || msPointerEnabled ? event.originalEvent : event.originalEvent.touches[0];
                             swipeDistanceX = touchEvent.clientX - startX;
                             swipeDistanceY = touchEvent.clientY - startY;
                             if (sliding == 1){
@@ -324,26 +327,33 @@
                 },
 
                 arrow_nav: function () {
-                    $sliderParent.append('<ul class="carouselps-nav"><li class="prev"><a><</a></li><li class="next"><a>></a></li></ul>');
-                    $sliderBottomNavItem = $sliderParent.find('.carouselps-nav li');
+                    $sliderParent.append('<span class="carouselps-arrow prev" data-direction="prev"><a><</a></span><span class="carouselps-arrow next" data-direction="next"><a>></a></span>');
+                    $sliderBottomNavItem = $sliderParent.find('.carouselps-arrow');
                     $sliderBottomNavItem.bind('click', function () {
-                        animateDirection = $(this).attr('class');
+                        animateDirection = $(this).data('direction');
                         carouselps.animate();
                     });
                 },
 
                 bottom_nav: function () {
-                    $sliderWrapper.append('<ul class="carouselps-nav-bottom"/>');
-                    $bottomNav = $sliderWrapper.find('.carouselps-nav-bottom');
-                    $sliderItems.each(function () {
-                        $bottomNav.append('<li><a></a></li>');
-                    });
-                    $bottomNavItem = $bottomNav.find('li');
-                    $bottomNav.find('li:first-child').addClass('current');
+                    if (typeof options.custom_bottom_nav == 'object') {
+                        $bottomNavItem = options.custom_bottom_nav;
+                        $bottomNavItem.first().addClass('current');
+                    } else {
+                        $sliderWrapper.append('<ul class="carouselps-nav-bottom"/>');
+                        $bottomNav = $sliderWrapper.find('.carouselps-nav-bottom');
+                        $sliderItems.each(function () {
+                            $bottomNav.append('<li><a></a></li>');
+                        });
+                        $bottomNavItem = $bottomNav.find('li');
+                        $bottomNav.find('li:first-child').addClass('current');
+                    }
                     $bottomNavItem.bind('click', function () {
-                        bottomNavClickIndex = $(this).index();
-                        animateDirection = "bottom";
-                        carouselps.animate();
+                        if (!$(this).hasClass('current')){
+                            bottomNavClickIndex = $(this).index();
+                            animateDirection = "bottom";
+                            carouselps.animate();
+                        }
                     });
                 },
 
@@ -399,9 +409,7 @@
                     if (timer) {
                         clearTimeout(timer);
                     }
-                    timer = setTimeout(function () {
-                        carouselps.calcs();
-                    }, 100);
+                    timer = setTimeout(carouselps.calcs, 100);
                 });
             }
         });

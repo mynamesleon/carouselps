@@ -16,8 +16,8 @@ body {-webkit-tap-highlight-color: rgba(0,0,0,0);}
 .carouselps li { padding: 0; margin: 0; display: inline-block; float:left; position: relative;margin-right: 5px;}
 .carouselps li img {width: 100%; }
 
-.carouselps-nav { position: absolute; top: 0; right: 5px; z-index: 100; }
-.carouselps-nav li { display: inline; padding: 3px 10px; margin: 0 1px; background: #f7fcf6; color: grey; cursor: pointer; box-shadow: 0 0 6px rgba(0,0,0,0.5); font-weight: 900;}
+.carouselps-arrow { position: absolute; top: 5px; right: 5px; padding: 3px 10px; background: #f7fcf6; color: grey; cursor: pointer; box-shadow: 0 0 6px rgba(0,0,0,0.5); font-weight: 900; z-index: 100;}
+.carouselps-arrow.prev {right: 36px;}
 
 .carouselps-nav-bottom { width: 100%; text-align: center; clear: both; position: relative; margin: 10px 0 0 0; padding-left: 0; list-style: none; }
 .carouselps-nav-bottom li {display: inline; margin: 0 3px; cursor: pointer;}
