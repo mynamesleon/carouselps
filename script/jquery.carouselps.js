@@ -15,15 +15,17 @@
             auto_direction: 'next', // auto-animate direction: 'next' or 'prev'
             arrow_nav: true, // control whether or not arrow navigation renders
             bottom_nav: true, // control whether or not bottom navigation renders
-            custom_bottom_nav: false, // can specify to elements replace default bottom nav, e.g. $('.bottom-nav > div') - they must all be siblings
-            use_css3: true, // if supported, control whether or not the slide transitions use the translate3d css3 property
+            custom_bottom_nav: false, // can specify elements to replace default bottom nav, e.g. $('.bottom-nav > div') - they must all be siblings
+            use_css3: true, // if supported, control whether or not the slide transitions use css animations
             swipe: true, // enable/disable touch swipe capability
             responsive: true, // determine if the slides should alter width on resize - their width is set to the slider's parent width
             adjust_height: false, // whether or not the slider should adjust height based on the active slide: fade sets this to true by default
             slide_delay: 2500, // the time interval between the carousel's auto-animations
             animate_speed: 500, // the animation speed between slides
-            load_callback: function() {},
-            slide_callback: function() {}
+            load_callback: function() {}, // callback for when the banner has loaded 
+            slide_callback: function() {}, // callback for the end of each slide transition
+            bottom_nav_click: function() {}, // callback for click on bottom nav (only fires if not current item)
+            arrow_click: function() {} // callback for arrow click
         };
 
         options = $.extend({}, defaults, options);
@@ -36,6 +38,7 @@
                 $sliderItemLast = $slider.children('li:last-child'),
                 $sliderItemCurrent = $slider.find('.current'),
                 sliderPos,
+                $sliderClones,
                 $sliderStartClone,
                 $sliderEndClone,
                 $sliderParent,
@@ -49,8 +52,7 @@
                 youtubePlaying = false,
                 hovering = false,
                 animProp, cssPrefix, slideTimer,
-                isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase()),
-                touch = isMobile ? ('ontouchstart' in window) || window.DocumentTouch && document instanceof DocumentTouch : false;
+                isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase());
 
             var carouselps = {
                 init: function () {
@@ -82,7 +84,7 @@
                         carouselps.swipe();
                     }
                     if (typeof options.load_callback == 'function'){
-                        options.load_callback();
+                        options.load_callback($slider);
                     }
                 },
 
@@ -102,13 +104,12 @@
                             cssPrefix = props[i].replace('Perspective', '').toLowerCase();
                             animProp = '-' + cssPrefix + '-transform';
                             $slider.css('-' + cssPrefix + '-transition', '-' + cssPrefix + '-transform 0s ease-out');
-                            return true;
                         }
                     }
                 },
 
                 calcs: function () {
-                    $sliderItems.width($sliderParent.innerWidth()); // sets each li to initial width of container
+                    $sliderItems.width($sliderParent.width()); // sets each li to initial width of container
                     sliderPos = $sliderItemCurrent.position().left * -1;
                     if (!options.fade) {
                         if (options.use_css3 && css3support) {
@@ -124,10 +125,11 @@
                 },
 
                 continuous: function () {
-                    $sliderItemFirst.clone(true).insertAfter($sliderItemLast).addClass('clone').removeClass('current');
-                    $sliderItemLast.clone(true).insertBefore($sliderItemFirst).addClass('clone');
+                    $slider.prepend($sliderItems.clone(true).removeClass('current').addClass('clone'))
+                        .append($sliderItems.clone(true).removeClass('current').addClass('clone'));
                     $sliderStartClone = $sliderItemFirst.prev('li');
                     $sliderEndClone = $sliderItemLast.next('li');
+                    $sliderClones = $slider.children('li.clone');
                     $sliderItems = $slider.children('li');
                 },
 
@@ -149,7 +151,7 @@
                             }
                             break;
                         case 'bottom':
-                            var index = options.continuous ? bottomNavClickIndex + 1 : bottomNavClickIndex;
+                            var index = options.continuous ? bottomNavClickIndex + ($sliderClones.length / 2) : bottomNavClickIndex;
                             $sliderItems.eq(index).addClass("current");
                             break;
                         case 'default':
@@ -182,7 +184,7 @@
                         }
                         if (options.bottom_nav) {
                             $bottomNavItem.removeClass('current');
-                            var bottomIndex = (options.continuous) ? ($sliderEndClone.hasClass('current')) ? 0 : $sliderItemCurrent.index() - 1 : $sliderItemCurrent.index();
+                            var bottomIndex = (options.continuous) ? ($sliderEndClone.hasClass('current')) ? 0 : $sliderItemCurrent.index() - ($sliderClones.length / 2) : $sliderItemCurrent.index();
                             $bottomNavItem.eq(bottomIndex).addClass('current');
                         }
                         if (options.adjust_height && $slider.height() != $sliderItemCurrent.height()) {
@@ -218,9 +220,6 @@
                     if (options.fade){
                         $sliderItems.not($sliderItemCurrent).css('opacity', '0');
                     }
-                    if (typeof options.slide_callback == 'function'){
-                        options.slide_callback();
-                    }
                     isAnimating = false;
                     if (options.auto_slide && !hovering) {
                         if (slideTimer) {
@@ -228,6 +227,9 @@
                         }
                         animateDirection = options.auto_direction;
                         slideTimer = setTimeout(carouselps.animate, options.slide_delay);
+                    }
+                    if (typeof options.slide_callback == 'function'){
+                        options.slide_callback($slider);
                     }
                 },
 
@@ -256,7 +258,7 @@
                         endTouch = pointerEnabled ? 'pointerup' : msPointerEnabled ? 'MSPointerUp' : 'touchend';
 
                     if (pointerEnabled || msPointerEnabled){
-                        $slider.css({'touch-action': 'pan-y', 'ms-touch-action' : 'pan-y'});
+                        $slider.css({'touch-action': 'pan-y', '-ms-touch-action' : 'pan-y'});
                     }
 
                     $slider.on(startTouch, slideStart)
@@ -302,6 +304,8 @@
                                         $sliderItemFirst : $sliderItemCurrent.next('li') : $sliderItemCurrent;
                                     $sliderItemNext.css({'z-index': '3', 'opacity': 0 + (Math.abs(swipeDistanceX) / $sliderParent.innerWidth()) });
                                 }
+                            } else {
+                                sliding = 0;
                             }
                         }
                     }
@@ -316,13 +320,9 @@
                                 animateDirection = "default";
                             }
                             carouselps.animate();
-                            varReset();
+                            startX = 0, startY = 0, movementXOffset = 0, movementYOffset = 0, swipeDistanceX = 0, swipeDistanceY = 0,
+                            sliding = 0, scrolling = true;
                         }
-                    }
-
-                    function varReset() {
-                        startX = 0, startY = 0, movementXOffset = 0, movementYOffset = 0, swipeDistanceX = 0, swipeDistanceY = 0,
-                        sliding = 0, scrolling = true;
                     }
                 },
 
@@ -332,6 +332,9 @@
                     $sliderBottomNavItem.bind('click', function () {
                         animateDirection = $(this).data('direction');
                         carouselps.animate();
+                        if (typeof options.arrow_click == 'function'){
+                            options.arrow_click($(this), $slider);
+                        }
                     });
                 },
 
@@ -348,11 +351,15 @@
                         $bottomNavItem = $bottomNav.find('li');
                         $bottomNav.find('li:first-child').addClass('current');
                     }
-                    $bottomNavItem.bind('click', function () {
+                    $bottomNavItem.bind('click', function (event) {
+                        event.preventDefault();
                         if (!$(this).hasClass('current')){
                             bottomNavClickIndex = $(this).index();
                             animateDirection = "bottom";
                             carouselps.animate();
+                            if (typeof options.bottom_nav_click == 'function'){
+                                options.bottom_nav_click($(this), $slider);
+                            }
                         }
                     });
                 },

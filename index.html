@@ -5,25 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 	<link rel="stylesheet" href="css/style.css" />
 	<script src="script/jquery.min.js"></script>
-	<script src="script/jquery.carouselps.js"></script>
+	<script src="script/jquery.carouselps.min.js"></script>
     <script>
     $(document).ready(function(){
         $('.boom').carouselps({
-            fade: false,                  // use fade or slide transition mode: if true, will set continuous and use_css3 to false
-            continuous: true,             // determines whether the slide loop is continuous
-            auto_slide: true,             // whether or not the carousel will animate automatically
-            auto_direction: 'next',       // auto-animate direction: 'next' or 'prev'
-            arrow_nav: true,              // control whether or not arrow navigation renders
-            bottom_nav: true,             // control whether or not bottom navigation renders
-            custom_bottom_nav: false,     // specify custom elements to replace the default bottom nav
-            use_css3: true,               // if supported, control whether or not the slide transitions use the translate3d css3 property
-            swipe: true,                  // enable/disable touch swipe capability
-            responsive: true,             // determine if the slides should alter width on resize - their width is set to the slider's parent width
-            adjust_height: false,         // whether or not the slider should adjust height based on the active slide: fade sets this to true by default
-            slide_delay: 2500,            // the time interval between the carousel's auto-animations
-            animate_speed: 500,            // the animation speed between slides
-            load_callback: function() {}, // callback for when the banner has loaded 
-            slide_callback: function() {} // callback for the end of each slide transition
+            fade: false,                     // use fade or slide transition mode: if true, will set continuous and use_css3 to false
+            continuous: true,                // determines whether the slide loop is continuous
+            auto_slide: true,                // whether or not the carousel will animate automatically
+            auto_direction: 'next',          // auto-animate direction: 'next' or 'prev'
+            arrow_nav: true,                 // control whether or not arrow navigation renders
+            bottom_nav: true,                // control whether or not bottom navigation renders
+            custom_bottom_nav: false,        // specify custom elements to replace the default bottom nav
+            use_css3: true,                  // if supported, control whether or not the slide transitions use the translate3d css3 property
+            swipe: true,                     // enable/disable touch swipe capability
+            responsive: true,                // determine if the slides should alter width on resize - their width is set to the slider's parent width
+            adjust_height: false,            // whether or not the slider should adjust height based on the active slide: fade sets this to true by default
+            slide_delay: 2500,               // the time interval between the carousel's auto-animations
+            animate_speed: 500,              // the animation speed between slides
+            load_callback: function() {},    // callback for when the banner has loaded 
+            slide_callback: function() {},   // callback for the end of each slide transition
+            bottom_nav_click: function() {}, // callback for click on bottom nav (only fires if not current item)
+            arrow_click: function() {}       // callback for arrow click
         });
     });
     </script>
