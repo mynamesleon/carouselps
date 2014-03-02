@@ -13,8 +13,8 @@ body {-webkit-tap-highlight-color: rgba(0,0,0,0);}
 .carouselps-wrap { overflow: hidden; position: relative; }
 
 .carouselps { list-style: none; padding: 0; margin: 0; position: relative; overflow: hidden; width: 99999px;}
-.carouselps li { padding: 0; margin: 0; display: inline-block; float:left; position: relative;margin-right: 5px;}
-.carouselps li img {width: 100%; }
+.carouselps > li, .carouselps > div { padding: 0; margin: 0; display: inline-block; float:left; position: relative;margin-right: 5px;}
+.carouselps > li img, .carouselps > div img {width: 100%; }
 
 .carouselps-arrow { position: absolute; top: 5px; right: 5px; padding: 3px 10px; background: #f7fcf6; color: grey; cursor: pointer; box-shadow: 0 0 6px rgba(0,0,0,0.5); font-weight: 900; z-index: 100;}
 .carouselps-arrow.prev {right: 36px;}
@@ -26,7 +26,4 @@ body {-webkit-tap-highlight-color: rgba(0,0,0,0);}
 
 @media screen and (max-width:1000px) {
 	.carouselps-wrapper { width: 90%; padding: 2%;}
-}
-@media screen and (max-width:560px) {
-	.carouselps li:hover span.title, .carouselps li span.title {display: none;}
 }
