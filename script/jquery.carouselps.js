@@ -56,8 +56,7 @@
 
             var carouselps = {
                 init: function () {
-                    var sliderClass = options.vertical ? 'carouselps vertical' : 'carouselps horizontal';
-                    $slider.addClass(sliderClass).wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>");
+                    $slider.addClass('carouselps').wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>");
                     $sliderWrapper = $slider.parents('.carouselps-wrapper');
                     $sliderParent = $slider.parent();
                     $sliderItems.eq(options.starting_slide - 1).addClass('current');
@@ -246,78 +245,121 @@
                     });
                 },
 
-                swipe: function () {
-                    var startX = 0, startY = 0, movementXOffset = 0, movementYOffset = 0, swipeDistanceX = 0, swipeDistanceY = 0, sliding = 0, scrolling = true, 
-                        pointerEnabled = window.navigator.pointerEnabled, msPointerEnabled = window.navigator.msPointerEnabled, touchEvent,
-                        startTouch = pointerEnabled ? 'pointerdown' : msPointerEnabled ? 'MSPointerDown' : 'touchstart',
-                        moveTouch = pointerEnabled ? 'pointermove' : msPointerEnabled ? 'MSPointerMove' : 'touchmove',
-                        endTouch = pointerEnabled ? 'pointerup' : msPointerEnabled ? 'MSPointerUp' : 'touchend';
+                swipe: function(){
+                    var eventListeners = { // define the event listeners to use for each browser
+                        start: { 'IEedge': 'pointerdown', 'IE10': 'MSPointerDown', 'webkit': 'touchstart' },
+                        move: { 'IEedge': 'pointermove', 'IE10': 'MSPointerMove', 'webkit': 'touchmove' },
+                        end: { 'IEedge': 'pointerup', 'IE10': 'MSPointerUp', 'webkit': 'touchend' },
+                        cancel: { 'IEedge': 'pointercancel', 'IE10': 'MSPointerCancel', 'webkit': 'touchcancel' }
+                    };
 
-                    if (pointerEnabled || msPointerEnabled){
-                        $slider.css({'touch-action': 'pan-y', '-ms-touch-action' : 'pan-y'});
+                    var startX = 0, movementX = 0, startY = 0, movementY = 0, sliding = 0, scrolling = true, startPointerId = -1, direction = null,
+                        swipeDirection = 'horizontal',
+                        touchEnabled = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0,
+                        pointerEnabled = window.navigator.pointerEnabled,
+                        msPointerEnabled = window.navigator.msPointerEnabled,
+                        msTouchDevice = touchEnabled ? pointerEnabled || msPointerEnabled : false, // pointer detection does not equate to touch support - hence the touchenabled variable
+                        userBrowser = msTouchDevice ? pointerEnabled ? 'IEedge' : 'IE10' : 'webkit', // users browser to determine necessary eventlisteners
+                        cancelTouch = eventListeners.cancel[userBrowser],
+                        startTouch = eventListeners.start[userBrowser],
+                        moveTouch = eventListeners.move[userBrowser],
+                        endTouch = eventListeners.end[userBrowser];
+
+                    var touchProp = { 'horizontal': 'pan-y', 'vertical': 'pan-x', 'all': 'none' },
+                        touchPropCss = touchProp[options.swipeDirection];
+
+                    // add touch-action and -ms-touch-action properties to element to prevent default swipe action on MS touch devices
+                    $slider.css({ '-ms-touch-action': touchPropCss, 'touch-action': touchPropCss,  })
+                        .on(startTouch, slideStart).on(cancelTouch, varsReset); // attach start and cancel events
+                    
+
+                    function varsReset() {
+                        startX = 0; movementX = 0; startY = 0; movementY = 0; scrolling = true; startPointerId = -1; direction = null; sliding = 0;
                     }
-
-                    $slider.on(startTouch, slideStart);
 
                     function slideStart(event) {
                         if (!isAnimating){
-                            if (pointerEnabled ? event.originalEvent.pointerType === 'touch' : msPointerEnabled ? event.originalEvent.pointerType === 2 : !event.originalEvent.touches[1]) {
-                                if (sliding === 0) {
-                                    sliding = 1;
-                                    touchEvent = pointerEnabled || msPointerEnabled ? event.originalEvent : event.originalEvent.touches[0];
-                                    startX = touchEvent.clientX;
-                                    startY = touchEvent.clientY;
-                                    $slider.css('-' + cssPrefix + '-transition-duration', '0s')
-                                        .on(moveTouch, slide).on(endTouch, slideEnd);
-                                }
+                            if (msTouchDevice ? startPointerId === -1 && (event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2) : !event.originalEvent.targetTouches[1]) { // pointerType is 'touch' in IE11, 2 in IE10 for touch
+                                sliding = 1;
+                                var touchEvent = msTouchDevice ? event.originalEvent : event.originalEvent.targetTouches[0]; // using target touches for webkit
+                                startX = touchEvent.clientX;
+                                startY = touchEvent.clientY;
+
+                                $slider.css('-' + cssPrefix + '-transition-duration', '0s') // set transition duration to 0s
+                                    .on(moveTouch, slideMove).on(endTouch, slideEnd); // attach move and end events
+                                startPointerId = msTouchDevice ? event.originalEvent.pointerId : event.originalEvent.targetTouches[0].identifier; // define initial pointerId to check against to prevent multi-touch issues
+                                $('html').css({ '-ms-touch-action': 'none', 'touch-action': 'none' }); // disable any touch events on html tag
                             }
                         }
                     }
 
-                    function slide(event) {
-                        if (sliding !== 0){
-                            touchEvent = pointerEnabled || msPointerEnabled ? event.originalEvent : event.originalEvent.touches[0];
-                            swipeDistanceX = touchEvent.clientX - startX;
-                            swipeDistanceY = touchEvent.clientY - startY;
+                    function slideMove(event) {
+                        if (msTouchDevice ? startPointerId === event.originalEvent.pointerId && (event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2) : startPointerId === event.originalEvent.targetTouches[0].identifier) {
+                            var touchEvent = msTouchDevice ? event.originalEvent : event.originalEvent.targetTouches[0];
+                            movementX = touchEvent.clientX - startX;
+                            movementY = touchEvent.clientY - startY;
+
                             if (sliding === 1){
-                                scrolling = Math.abs(swipeDistanceX) < Math.abs(swipeDistanceY);
+                                var scrollCheck = {
+                                    'horizontal': Math.abs(movementY) > Math.abs(movementX),
+                                    'vertical': Math.abs(movementY) < Math.abs(movementX),
+                                    'all': false
+                                };
+                                scrolling = scrollCheck[swipeDirection]; // detect if user is trying to scroll, so prevent defined touch action from firing in this case
                             }
 
                             if (!scrolling) {
                                 event.preventDefault();
-                                if (options.auto_slide) {
+                                sliding = 2;
+                                if (options.auto_slide) { // clear the auto slide timer
                                     clearTimeout(slideTimer);
                                 }
-                                sliding = 2;
-                                if (css3support) {
-                                    movementXOffset = sliderPos + swipeDistanceX;
+                                if (css3support && !options.fade) { // slide movement
+                                    movementXOffset = sliderPos + movementX;
                                     $slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
-                                } else if (options.fade) {
-                                    var $sliderItemNext = swipeDistanceX > 0 ? $sliderItemCurrent.is($sliderItemFirst) ?
-                                        $sliderItemLast : $sliderItemCurrent.prev() :
-                                        swipeDistanceX < 0 ? $sliderItemCurrent.is($sliderItemLast) ?
-                                        $sliderItemFirst : $sliderItemCurrent.next() : $sliderItemCurrent;
-                                    $sliderItemNext.css({'z-index': '3', 'opacity': 0 + (Math.abs(swipeDistanceX) / $sliderParent.innerWidth()) });
+                                } else if (options.fade) { // fade movement
+                                    if (movementX !== 0){
+                                        var $sliderItemNext = movementX > 0 ? $sliderItemCurrent.is($sliderItemFirst) ?
+                                            $sliderItemLast : $sliderItemCurrent.prev() :
+                                            movementX < 0 ? $sliderItemCurrent.is($sliderItemLast) ?
+                                            $sliderItemFirst : $sliderItemCurrent.next() : $sliderItemCurrent;
+                                        $sliderItemNext.css({'z-index': '3', 'opacity': 0 + (Math.abs(movementX) / $sliderParent.innerWidth()) });
+                                    }
                                 }
-                            } else {
-                                sliding = 0;
                             }
                         }
                     }
 
                     function slideEnd(event) {
-                        if (sliding === 2) {
-                            if (swipeDistanceX > options.swipe_threshold) {
-                                animateDirection = "prev";
-                            } else if (swipeDistanceX < -options.swipe_threshold) {
-                                animateDirection = "next";
-                            } else {
-                                animateDirection = "default";
+                        if (msTouchDevice ? startPointerId === event.originalEvent.pointerId && (event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2) : !event.originalEvent.targetTouches.length) {
+                            if (!scrolling) {
+                                if (swipeDirection === 'horizontal') {
+                                    direction = movementX > options.swipe_threshold ? 'right' : movementX < -options.swipe_threshold ? 'left' : 'notReached';
+                                } else if (swipeDirection === 'vertical') {
+                                    direction = movementY > options.swipe_threshold ? 'down' : movementY < -options.swipe_threshold ? 'up' : 'notReached';
+                                } else {
+                                    direction = null;
+                                }
+                                switch (direction) {
+                                    case 'left':
+                                        animateDirection = 'next';
+                                        break;
+                                    case 'right':
+                                        animateDirection = 'prev';
+                                        break;
+                                    case 'up':
+                                        break;
+                                    case 'down':
+                                        break;
+                                    case 'notReached':
+                                        animateDirection = null;       
+                                        break;
+                                }
+                                carouselps.animate();
                             }
-                            carouselps.animate();
-                            startX = 0, startY = 0, movementXOffset = 0, movementYOffset = 0, swipeDistanceX = 0, swipeDistanceY = 0,
-                            sliding = 0, scrolling = true;
-                            $slider.off(moveTouch).off(endTouch);
+                            $('html').css({ '-ms-touch-action': 'auto', 'touch-action': 'auto' }); // reenable touch events on html
+                            $slider.off(moveTouch, slideMove).off(endTouch, slideEnd); // unbind move and end events
+                            varsReset(); // reset main variables
                         }
                     }
                 },
@@ -365,6 +407,9 @@
                 if (options.adjust_height) {
                     $slider.height($sliderItemCurrent.height());
                 }
+                if (options.responsive){
+                    carouselps.calcs();
+                }
             });
 
             if (options.responsive) {
@@ -382,4 +427,5 @@
         });
 
     };
+
 }(jQuery));
