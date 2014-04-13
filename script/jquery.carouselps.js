@@ -2,7 +2,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~                   Carousel Plugin                   ~~
 ~~           Leon Slater, www.lpslater.co.uk           ~~
-~~                    Version 1.1.0                    ~~
+~~                    Version 1.1.1                    ~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 (function ($) {
@@ -23,8 +23,8 @@
             adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
             slide_delay: 2500, // the time interval between the carousel's auto-animations
             animate_speed: 500, // the animation speed between slides
-            starting_slide: 1,
-            visible_slides: 1,
+            starting_slide: 1, // the starting slide
+            visible_slides: 1, // how many slides are visible within the slider area (does not apply to the fade option)
             load_callback: function($slider) {}, // callback for when the banner has loaded 
             slide_start: function($slider) {}, // callback for the start of each slide transition
             slide_end: function($slider) {}, // callback for the end of each slide transition
@@ -41,17 +41,20 @@
                 $sliderItemsNumber = $sliderItems.length,
                 $sliderItemFirst = $sliderItems.eq(0),
                 $sliderItemLast = $sliderItems.eq($sliderItemsNumber - 1),
+                $sliderItemInProg,
                 $sliderItemCurrent,
                 sliderPos,
                 $sliderParent,
                 $sliderWrapper,
                 $bottomNav,
                 $bottomNavItem,
+                $transitionElem,
                 bottomNavClickIndex,
                 isAnimating = false,
                 css3support = false,
                 animateDirection,
                 hovering = false,
+                swipeNotReached = false,
                 animProp, cssPrefix, slideTimer,
                 isMobile = /android|webos|iphone|ipad|ipod|blackberry/i.test(navigator.userAgent.toLowerCase());
 
@@ -90,7 +93,8 @@
                 },
                 
                 fade: function () {
-                    options.continuous = options.use_css3 = false;
+                    options.continuous = false;
+                    options.visible_slides = 1;
                     $sliderItems.css({'position': 'absolute', 'opacity': '0', 'z-index' : '1'});
                     $sliderItemCurrent.css({'opacity': '1', 'z-index' : '2'});
                 },
@@ -106,7 +110,11 @@
                         }
                     }
                     if (css3support){
-                        $slider.css('-' + cssPrefix + '-transition', '-' + cssPrefix + '-transform 0s ease-out');
+                        if (options.fade){
+                            $sliderItems.css('-' + cssPrefix + '-transition', 'opacity 0s ease-out');
+                        } else {
+                            $slider.css('-' + cssPrefix + '-transition', '-' + cssPrefix + '-transform 0s ease-out');
+                        }
                     }
                 },
 
@@ -167,10 +175,21 @@
                         isAnimating = true;
                         carouselps.before_anim();
                         sliderPos = $sliderItemCurrent.position().left * -1;
-                        if (options.use_css3 && css3support) {
-                            $slider.css('-' + cssPrefix + '-transition-duration', options.animate_speed / 1000 + 's')
-                                .css(animProp, 'translate3d(' + sliderPos + 'px, 0, 0)')
-                                .one('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', carouselps.after_anim);
+                        if (css3support) {
+                            $transitionElem = options.fade ? swipeNotReached ? $sliderItemInProg : $sliderItemCurrent : $slider;
+                            $transitionElem.bind('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', carouselps.after_anim)
+                                .css('-' + cssPrefix + '-transition-duration', options.animate_speed / 1000 + 's');
+                            if (options.fade){
+                                $sliderItemCurrent.css('opacity', '1');
+                                if (swipeNotReached){
+                                    $sliderItemInProg.css('opacity', '0');
+                                } else {
+                                    $sliderItems.css('z-index', '1');
+                                    $sliderItemCurrent.css('z-index', '2')
+                                }
+                            } else {
+                                $slider.css(animProp, 'translate3d(' + sliderPos + 'px, 0, 0)');
+                            }
                         } else {
                             if (options.fade) {
                                 $sliderItems.css('z-index', '1');
@@ -195,6 +214,9 @@
                 },
 
                 after_anim: function () {
+                    if (css3support){
+                        $transitionElem.unbind('webkitTransitionEnd otransitionend oTransitionEnd msTransitionEnd transitionend', carouselps.after_anim);
+                    }
                     if (options.continuous) {
                         if ($sliderItemCurrent.hasClass('clone')) {
                             var isCloneBefore = $sliderItemCurrent.hasClass('clone-before');
@@ -215,9 +237,17 @@
                         $sliderItemCurrent = $slider.find('.current');
                     }
                     if (options.fade){
+                        if (css3support){
+                            $sliderItems.css('-' + cssPrefix + '-transition-duration', '0s');
+                            if (swipeNotReached){
+                                $sliderItems.css('z-index', '1');
+                                $sliderItemCurrent.css('z-index', '2');
+                            }
+                        }
                         $sliderItems.not($sliderItemCurrent).css('opacity', '0');
                     }
                     isAnimating = false;
+                    swipeNotReached = false;
                     if (options.auto_slide) {
                         if (slideTimer) {
                             clearTimeout(slideTimer);
@@ -272,7 +302,7 @@
 
                     // add touch-action and -ms-touch-action properties to element to prevent default swipe action on MS touch devices
                     $slider.css({ '-ms-touch-action': touchPropCss, 'touch-action': touchPropCss })
-                        .on(startTouch, slideStart).on(cancelTouch, swipeReset); // attach start and cancel events
+                        .bind(startTouch, slideStart).bind(cancelTouch, swipeReset); // attach start and cancel events
                     
 
                     function swipeReset() {
@@ -280,7 +310,7 @@
                         $slider.off(moveTouch, slideMove).off(endTouch, slideEnd); // unbind move and end events
                         $('html').css({ '-ms-touch-action': 'auto', 'touch-action': 'auto' }); // reenable touch events on html
                         if (msTouchDevice) { // remove move and end events from the html element
-                            $('html').off(moveTouch, slideMove).off(endTouch, slideEnd);
+                            $('html').unbind(moveTouch, slideMove).unbind(endTouch, slideEnd);
                         }
                     }
 
@@ -292,13 +322,20 @@
                                 startX = touchEvent.clientX;
                                 startY = touchEvent.clientY;
 
-                                $slider.css('-' + cssPrefix + '-transition-duration', '0s') // set transition duration to 0s
-                                    .on(moveTouch, slideMove).on(endTouch, slideEnd); // attach move and end events
+                                if (css3support){ // set transition duration to 0s
+                                    if (options.fade){
+                                        $sliderItemCurrent.css('-' + cssPrefix + '-transition-duration', '0s');
+                                    } else {
+                                        $slider.css('-' + cssPrefix + '-transition-duration', '0s');
+                                    }
+                                }
+
+                                $slider.bind(moveTouch, slideMove).bind(endTouch, slideEnd); // attach move and end events
                                 startPointerId = msTouchDevice ? event.originalEvent.pointerId : event.originalEvent.targetTouches[0].identifier; // define initial pointerId to check against to prevent multi-touch issues
                                 $('html').css({ '-ms-touch-action': 'none', 'touch-action': 'none' }); // disable any touch events on html tag
 
                                 if (msTouchDevice) { // bind move and end events for MSTouch to the html element as well, to support movement if touch leaves element area
-                                    $('html').on(moveTouch, slideMove).on(endTouch, slideEnd); // attach move and end events
+                                    $('html').bind(moveTouch, slideMove).bind(endTouch, slideEnd); // attach move and end events
                                 }
                             }
                         }
@@ -330,11 +367,11 @@
                                     $slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
                                 } else if (options.fade) { // fade movement
                                     if (movementX !== 0){
-                                        var $sliderItemNext = movementX > 0 ? $sliderItemCurrent.is($sliderItemFirst) ?
+                                        $sliderItemInProg = movementX > 0 ? $sliderItemCurrent.is($sliderItemFirst) ?
                                             $sliderItemLast : $sliderItemCurrent.prev() :
                                             movementX < 0 ? $sliderItemCurrent.is($sliderItemLast) ?
                                             $sliderItemFirst : $sliderItemCurrent.next() : $sliderItemCurrent;
-                                        $sliderItemNext.css({'z-index': '3', 'opacity': 0 + (Math.abs(movementX) / $sliderParent.innerWidth()) });
+                                        $sliderItemInProg.css({'z-index': '3', 'opacity': 0 + (Math.abs(movementX) / $sliderParent.innerWidth()) });
                                     }
                                 }
                             } else {
@@ -365,6 +402,7 @@
                                     case 'down':
                                         break;
                                     case 'notReached':
+                                        swipeNotReached = true;
                                         animateDirection = null;       
                                         break;
                                 }

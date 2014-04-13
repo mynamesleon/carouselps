@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 	<link rel="stylesheet" href="css/style.css" />
 	<script src="script/jquery.min.js"></script>
-	<script src="script/jquery.carouselps.js"></script>
+	<script src="script/jquery.carouselps.min.js"></script>
     <script>
     $(document).ready(function(){
         $('.first').carouselps({
@@ -24,6 +24,7 @@
             slide_delay: 2500, // the time interval between the carousel's auto-animations
             animate_speed: 500, // the animation speed between slides
             starting_slide: 1,
+            visible_slides: 1,
             load_callback: function($slider) {}, // callback for when the banner has loaded 
             slide_start: function($slider) {}, // callback for the start of each slide transition
             slide_end: function($slider) {}, // callback for the end of each slide transition
@@ -35,7 +36,8 @@
             adjust_height: true, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
             slide_delay: 2500, // the time interval between the carousel's auto-animations
             starting_slide: 3,
-            swipe_threshold: 200
+            use_css3: true,
+            visible_slides: 2
         });
         $('.third').carouselps({
             fade: false, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
@@ -49,12 +51,12 @@
 
 <body>
     <p></p>
-    <!-- <ul class="first">
+    <ul class="first">
         <li><img src="images/slide1.png" /></li>
         <li><img src="images/slide2.png" /></li>
         <li><img src="images/slide3.png" /></li>
         <li><img src="images/slide4.png" /></li>
-    </ul> -->
+    </ul>
     <p></p>
     <ul class="second">
         <li><img src="images/slide1.png" /></li>
@@ -63,10 +65,10 @@
         <li><img src="images/slide4.png" /></li>
     </ul>
     <p></p>
-    <!-- <ul class="third">
+    <ul class="third">
         <li><img src="images/slide1.png" /></li>
         <li><img src="images/slide2.png" /></li>
         <li><img src="images/slide3.png" /></li>
         <li><img src="images/slide4.png" /></li>
-    </ul> -->
+    </ul>
 </body>
