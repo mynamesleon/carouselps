@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 	<link rel="stylesheet" href="css/style.css" />
 	<script src="script/jquery.min.js"></script>
-	<script src="script/jquery.carouselps.min.js"></script>
+	<script src="script/jquery.carouselps.js"></script>
     <script>
     $(document).ready(function(){
-        $('.boom').carouselps({
+        $('.first').carouselps({
             fade: false, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
             continuous: true, // determines whether the slide loop is continuous
             auto_slide: true, // whether or not the carousel will animate automatically
@@ -30,22 +30,43 @@
             bottom_nav_click: function($slider, $clickedItem) {}, // callback for click on bottom nav
             arrow_click: function($slider, $clickedItem) {} // callback for arrow click
         });
+        $('.second').carouselps({
+            fade: true, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
+            adjust_height: true, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
+            slide_delay: 2500, // the time interval between the carousel's auto-animations
+            starting_slide: 3,
+            swipe_threshold: 200
+        });
+        $('.third').carouselps({
+            fade: false, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
+            adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
+            starting_slide: 4,
+            visible_slides: 4
+        });
     });
     </script>
 </head>
 
 <body>
-<p></p>
-<ul class="boom">
-    <li><img src="images/slide1.png" /></li>
-    <li><img src="images/slide2.png" /></li>
-    <li><img src="images/slide3.png" /></li>
-    <li><img src="images/slide4.png" /></li>
-<!-- <li><iframe width="560" height="315" src="http://www.youtube.com/embed/PzzqE7EPoIc" frameborder="0" allowfullscreen></iframe></li> -->
-</ul>
-<ul class="test">
-    <li>test</li>
-    <li>test</li>
-    <li>test</li>
-</ul>
+    <p></p>
+    <!-- <ul class="first">
+        <li><img src="images/slide1.png" /></li>
+        <li><img src="images/slide2.png" /></li>
+        <li><img src="images/slide3.png" /></li>
+        <li><img src="images/slide4.png" /></li>
+    </ul> -->
+    <p></p>
+    <ul class="second">
+        <li><img src="images/slide1.png" /></li>
+        <li><img src="images/slide2.png" /></li>
+        <li><img src="images/slide3.png" /></li>
+        <li><img src="images/slide4.png" /></li>
+    </ul>
+    <p></p>
+    <!-- <ul class="third">
+        <li><img src="images/slide1.png" /></li>
+        <li><img src="images/slide2.png" /></li>
+        <li><img src="images/slide3.png" /></li>
+        <li><img src="images/slide4.png" /></li>
+    </ul> -->
 </body>

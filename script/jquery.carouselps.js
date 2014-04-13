@@ -24,6 +24,7 @@
             slide_delay: 2500, // the time interval between the carousel's auto-animations
             animate_speed: 500, // the animation speed between slides
             starting_slide: 1,
+            visible_slides: 1,
             load_callback: function($slider) {}, // callback for when the banner has loaded 
             slide_start: function($slider) {}, // callback for the start of each slide transition
             slide_end: function($slider) {}, // callback for the end of each slide transition
@@ -38,9 +39,9 @@
             var $slider = $(this),
                 $sliderItems = $slider.children(),
                 $sliderItemsNumber = $sliderItems.length,
-                $sliderItemFirst = $slider.children(':first-child'),
-                $sliderItemLast = $slider.children(':last-child'),
-                $sliderItemCurrent = $slider.find('.current'),
+                $sliderItemFirst = $sliderItems.eq(0),
+                $sliderItemLast = $sliderItems.eq($sliderItemsNumber - 1),
+                $sliderItemCurrent,
                 sliderPos,
                 $sliderParent,
                 $sliderWrapper,
@@ -57,9 +58,10 @@
             var carouselps = {
                 init: function () {
                     $slider.addClass('carouselps').wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>");
-                    $sliderWrapper = $slider.parents('.carouselps-wrapper');
                     $sliderParent = $slider.parent();
-                    $sliderItems.eq(options.starting_slide - 1).addClass('current');
+                    $sliderWrapper = $sliderParent.parent();
+                    $sliderItemCurrent = $sliderItems.eq(options.starting_slide - 1);
+                    $sliderItemCurrent.addClass('current');
                     if (options.arrow_nav) {
                         carouselps.arrow_nav();
                     }
@@ -72,7 +74,6 @@
                     if (options.continuous) {
                         carouselps.continuous();
                     }
-                    $sliderItemCurrent = $slider.find('.current');
                     if (options.use_css3) {
                         carouselps.use_css3();
                     }
@@ -91,7 +92,7 @@
                 fade: function () {
                     options.continuous = options.use_css3 = false;
                     $sliderItems.css({'position': 'absolute', 'opacity': '0', 'z-index' : '1'});
-                    $sliderItems.eq(options.starting_slide - 1).css({'opacity': '1', 'z-index' : '2'});
+                    $sliderItemCurrent.css({'opacity': '1', 'z-index' : '2'});
                 },
 
                 use_css3: function () {
@@ -102,18 +103,19 @@
                             css3support = true;
                             cssPrefix = props[i].replace('Perspective', '').toLowerCase();
                             animProp = '-' + cssPrefix + '-transform';
-                            $slider.css('-' + cssPrefix + '-transition', '-' + cssPrefix + '-transform 0s ease-out');
                         }
+                    }
+                    if (css3support){
+                        $slider.css('-' + cssPrefix + '-transition', '-' + cssPrefix + '-transform 0s ease-out');
                     }
                 },
 
                 calcs: function () {
-                    $sliderItems.width($sliderParent.width()); // sets each li to initial width of container
+                    $sliderItems.width($sliderParent.width() / options.visible_slides); // sets each li to initial width of container
                     sliderPos = $sliderItemCurrent.position().left * -1;
                     if (!options.fade) {
-                        if (options.use_css3 && css3support) {
-                            $slider.css('-' + cssPrefix + '-transition-duration', '0s')
-                                .css(animProp, 'translate3d(' + sliderPos + 'px, 0, 0)');
+                        if (css3support) {
+                            $slider.css( '-' + cssPrefix + '-transition-duration', '0s').css(animProp, 'translate3d(' + sliderPos + 'px, 0, 0)');
                         } else {
                             $slider.css('margin-left', '' + sliderPos + 'px');
                         }
@@ -269,12 +271,17 @@
                         touchPropCss = touchProp[options.swipeDirection];
 
                     // add touch-action and -ms-touch-action properties to element to prevent default swipe action on MS touch devices
-                    $slider.css({ '-ms-touch-action': touchPropCss, 'touch-action': touchPropCss,  })
-                        .on(startTouch, slideStart).on(cancelTouch, varsReset); // attach start and cancel events
+                    $slider.css({ '-ms-touch-action': touchPropCss, 'touch-action': touchPropCss })
+                        .on(startTouch, slideStart).on(cancelTouch, swipeReset); // attach start and cancel events
                     
 
-                    function varsReset() {
+                    function swipeReset() {
                         startX = 0; movementX = 0; startY = 0; movementY = 0; scrolling = true; startPointerId = -1; direction = null; sliding = 0;
+                        $slider.off(moveTouch, slideMove).off(endTouch, slideEnd); // unbind move and end events
+                        $('html').css({ '-ms-touch-action': 'auto', 'touch-action': 'auto' }); // reenable touch events on html
+                        if (msTouchDevice) { // remove move and end events from the html element
+                            $('html').off(moveTouch, slideMove).off(endTouch, slideEnd);
+                        }
                     }
 
                     function slideStart(event) {
@@ -289,6 +296,10 @@
                                     .on(moveTouch, slideMove).on(endTouch, slideEnd); // attach move and end events
                                 startPointerId = msTouchDevice ? event.originalEvent.pointerId : event.originalEvent.targetTouches[0].identifier; // define initial pointerId to check against to prevent multi-touch issues
                                 $('html').css({ '-ms-touch-action': 'none', 'touch-action': 'none' }); // disable any touch events on html tag
+
+                                if (msTouchDevice) { // bind move and end events for MSTouch to the html element as well, to support movement if touch leaves element area
+                                    $('html').on(moveTouch, slideMove).on(endTouch, slideEnd); // attach move and end events
+                                }
                             }
                         }
                     }
@@ -326,6 +337,8 @@
                                         $sliderItemNext.css({'z-index': '3', 'opacity': 0 + (Math.abs(movementX) / $sliderParent.innerWidth()) });
                                     }
                                 }
+                            } else {
+                                swipeReset();
                             }
                         }
                     }
@@ -357,16 +370,14 @@
                                 }
                                 carouselps.animate();
                             }
-                            $('html').css({ '-ms-touch-action': 'auto', 'touch-action': 'auto' }); // reenable touch events on html
-                            $slider.off(moveTouch, slideMove).off(endTouch, slideEnd); // unbind move and end events
-                            varsReset(); // reset main variables
+                            swipeReset(); // reset main variables and unbind move and end events
                         }
                     }
                 },
 
                 arrow_nav: function () {
                     $sliderParent.append('<span class="carouselps-arrow prev" data-direction="prev"><a></a></span><span class="carouselps-arrow next" data-direction="next"><a></a></span>');
-                    $sliderParent.find('.carouselps-arrow').bind('click', function () {
+                    $sliderParent.children('.carouselps-arrow').bind('click', function () {
                         animateDirection = $(this).data('direction');
                         carouselps.animate();
                         if (typeof options.arrow_click == 'function'){
@@ -380,10 +391,10 @@
                         $bottomNavItem = options.custom_bottom_nav;
                     } else {
                         $sliderWrapper.append('<ul class="carouselps-nav-bottom"/>');
-                        $bottomNav = $sliderWrapper.find('.carouselps-nav-bottom');
-                        $sliderItems.each(function () {
+                        $bottomNav = $sliderWrapper.children('.carouselps-nav-bottom');
+                        for (var i = 0; i < $sliderItemsNumber; i++){
                             $bottomNav.append('<li><a></a></li>');
-                        });
+                        }
                         $bottomNavItem = $bottomNav.children();
                     }
                     $bottomNavItem.eq(options.starting_slide - 1).addClass('current');
