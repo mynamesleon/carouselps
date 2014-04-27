@@ -21,6 +21,7 @@
             swipe_threshold: 100, // swipe distance (in pixels) required for swipe end event to fire
             responsive: true, // determine if the slides should alter width on resize - their width is set to the slider's parent width
             adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
+            adjust_height_after: false,
             slide_delay: 2500, // the time interval between the carousel's auto-animations
             animate_speed: 500, // the animation speed between slides
             starting_slide: 1, // the starting slide
@@ -207,7 +208,7 @@
                             var bottomIndex = (options.continuous) ? ($sliderItemCurrent.hasClass('clone-after')) ? 0 : $sliderItemCurrent.index() - $sliderItemsNumber : $sliderItemCurrent.index();
                             $bottomNavItem.eq(bottomIndex).addClass('current');
                         }
-                        if (options.adjust_height) {
+                        if (options.adjust_height && !options.adjust_height_after) {
                             $slider.animate({height: $sliderItemCurrent.height()}, {duration: options.animate_speed, queue: false});
                         }
                     }
@@ -245,6 +246,9 @@
                             }
                         }
                         $sliderItems.not($sliderItemCurrent).css('opacity', '0');
+                    }
+                    if (options.adjust_height && options.adjust_height_after) {
+                        $slider.stop().animate({height: $sliderItemCurrent.height()}, {duration: options.animate_speed, queue: false});
                     }
                     isAnimating = false;
                     swipeNotReached = false;
