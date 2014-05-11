@@ -171,7 +171,7 @@
                         }
                     $sliderItemCurrent = $sliderItems.eq(newCurrentIndex); // set the main variables
                     sliderCurrentIndex = $sliderItemCurrent.index();
-                    $sliderItemCurrent.addClass("current"); // add current class to new slide
+                    $sliderItemCurrent.addClass('current'); // add current class to new slide
                     if (typeof options.slide_start == 'function'){ // slide start callback
                         options.slide_start($slider);
                     }
@@ -324,9 +324,36 @@
                         }
                     }
 
+                    function toProceed(event, touchType){ // the conditionals that determine whether the touch event should be ignored or not
+                        var toProceed;
+                        switch(touchType){
+                            case 'start':
+                                toProceed = startPointerId === -1;
+                            break;
+                            case 'move':
+                                if (msTouchDevice){
+                                    toProceed = startPointerId === event.originalEvent.pointerId;    
+                                } else { // targetTouches checks touches on the element - allows for user to have swipe interactions on more than one element at a time
+                                    toProceed = startPointerId === event.originalEvent.targetTouches[0].identifier;
+                                }
+                            break;
+                            case 'end':
+                                if (msTouchDevice){
+                                    toProceed = startPointerId === event.originalEvent.pointerId;   
+                                } else { // need to check the changedTouches object here, as targetTouches will return empty if only one touch was present
+                                    toProceed = startPointerId === event.originalEvent.changedTouches[0].identifier;   
+                                }
+                            break;
+                        }
+                        if (msTouchDevice && toProceed){ // if on an msTouch device, make sure the event type is touch, and not a pen or mouse input
+                            toProceed = event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2; // returns '2' for touch on IE10
+                        }
+                        return toProceed;
+                    }
+
                     function slideStart(event) {
                         if (!isAnimating){
-                            if (msTouchDevice ? startPointerId === -1 && (event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2) : !event.originalEvent.targetTouches[1]) { // pointerType is 'touch' in IE11, 2 in IE10 for touch
+                            if (toProceed(event, 'start')) {
                                 var touchEvent = msTouchDevice ? event.originalEvent : event.originalEvent.targetTouches[0]; // using target touches for webkit
                                 startX = touchEvent.clientX;
                                 startY = touchEvent.clientY;
@@ -352,7 +379,7 @@
                     }
 
                     function slideMove(event) {
-                        if (msTouchDevice ? startPointerId === event.originalEvent.pointerId && (event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2) : startPointerId === event.originalEvent.targetTouches[0].identifier) {
+                        if (toProceed(event, 'move')) {
                             var touchEvent = msTouchDevice ? event.originalEvent : event.originalEvent.targetTouches[0];
                             movementX = touchEvent.clientX - startX;
                             movementY = touchEvent.clientY - startY;
@@ -368,7 +395,7 @@
                             }
 
                             if (!scrolling) {
-                                event.preventDefault(); // prevent browser default behaviour if swiping in defined "swipeDirection"
+                                event.preventDefault(); // prevent browser default behaviour if swiping in defined 'swipeDirection'
                                 if (options.auto_slide) { // clear the auto slide timer
                                     clearTimeout(slideTimer);
                                 }
@@ -376,35 +403,31 @@
                                     movementXOffset = sliderPos + movementX;
                                     $slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
                                 } else if (options.fade) { // fade movement
-                                    if (movementX !== 0){
-                                        var moveDirection = movementX > 0 ? 'prev' : 'next';
-                                        switch (moveDirection){
-                                            case 'prev':
-                                                if ($sliderItemCurrent.is($sliderItemFirst)){
-                                                    $sliderItemInProg = $sliderItemLast;
-                                                } else {
-                                                    $sliderItemInProg = $sliderItems.eq(sliderCurrentIndex - 1)
-                                                }
-                                            break;
-                                            case 'next':
-                                                if ($sliderItemCurrent.is($sliderItemLast)){
-                                                    $sliderItemInProg = $sliderItemFirst;
-                                                } else {
-                                                    $sliderItemInProg = $sliderItems.eq(sliderCurrentIndex + 1);
-                                                }
-                                            break;
+                                    if (movementX !== 0){ // prevent the opacity from trying to change on the initial touch
+                                        if (movementX > 0){ 
+                                            if ($sliderItemCurrent.is($sliderItemFirst)){
+                                                $sliderItemInProg = $sliderItemLast;
+                                            } else {
+                                                $sliderItemInProg = $sliderItems.eq(sliderCurrentIndex - 1)
+                                            }
+                                        } else {
+                                            if ($sliderItemCurrent.is($sliderItemLast)){
+                                                $sliderItemInProg = $sliderItemFirst;
+                                            } else {
+                                                $sliderItemInProg = $sliderItems.eq(sliderCurrentIndex + 1);
+                                            }
                                         }
                                         $sliderItemInProg.css({'z-index': '3', 'opacity': 0 + (absoluteMovementX / sliderParentWidth) });
                                     }
                                 }
-                            } else {
+                            } else { // if the user is trying to scroll normally, remove event listeners and reset variables
                                 swipeReset();
                             }
                         }
                     }
 
                     function slideEnd(event) {
-                        if (msTouchDevice ? startPointerId === event.originalEvent.pointerId && (event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2) : !event.originalEvent.targetTouches.length) {
+                        if (toProceed(event, 'end')) {
                             if (!scrolling) {
                                 if (swipeDirection === 'horizontal') {
                                     direction = movementX > options.swipe_threshold ? 'right' : movementX < -options.swipe_threshold ? 'left' : 'notReached';
@@ -461,7 +484,7 @@
                         event.preventDefault();
                         if (!$(this).hasClass('current')){
                             bottomNavClickIndex = $(this).index();
-                            animateDirection = "bottom";
+                            animateDirection = 'bottom';
                             carouselps.animate();
                         }
                         if (typeof options.bottom_nav_click == 'function'){ // bottom nav click callback
