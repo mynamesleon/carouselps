@@ -24,7 +24,7 @@
             adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
             adjust_height_after: false, // if adjust_height is true, whether to animate the height after the slide transition (will use the same animate_speed time)
             animate_speed: 500, // the animation speed between slides
-            load_callback: function($slider) {}, // callback for when the banner has loaded 
+            load_callback: function($slider) {}, // callback for when the banner has loaded
             slide_start: function($slider) {}, // callback for the start of each slide transition
             slide_end: function($slider) {}, // callback for the end of each slide transition
             bottom_nav_click: function($slider, $clickedItem) {}, // callback for click on bottom nav
@@ -93,7 +93,7 @@
                         options.load_callback($slider);
                     }
                 },
-                
+
                 fade: function () { // set relevant css properties for fade transitions
                     options.continuous = false; // set continuous to false, as the cloning is not needed in this case
                     options.visible_slides = 1; // reset the visible_slides variable to 1
@@ -111,7 +111,7 @@
                             animProp = '-' + cssPrefix + '-transform';
                         }
                     }
-                    if (css3support){ // set initial transition properties 
+                    if (css3support){ // set initial transition properties
                         if (options.fade){
                             $sliderItems.css('-' + cssPrefix + '-transition', 'opacity 0s ease-out');
                         } else {
@@ -233,7 +233,7 @@
                             sliderCurrentIndex = $sliderItemCurrent.index();
                             sliderPos = $sliderItemCurrent.position().left * -1; // set the slider position to the current item that matches the clone
                             if (options.use_css3 && css3support) { // if using css animations...
-                                var cssObj = {}; 
+                                var cssObj = {};
                                 cssObj['-' + cssPrefix + '-transition-duration'] = '0s'; // set transition duration on the slider to 0
                                 cssObj[animProp] = 'translate3d(' + sliderPos + 'px, 0, 0)'; // reset slider position to relevant item
                                 $slider.css(cssObj);
@@ -308,12 +308,12 @@
                         sliderParentWidth;
 
                     var touchProp = { 'horizontal': 'pan-y', 'vertical': 'pan-x', 'all': 'none' },
-                        touchPropCss = touchProp[options.swipeDirection];
+                        touchPropCss = touchProp[swipeDirection];
 
                     // add touch-action and -ms-touch-action properties to element to prevent default swipe action on MS touch devices
                     $slider.css({ '-ms-touch-action': touchPropCss, 'touch-action': touchPropCss })
                         .bind(startTouch, slideStart).bind(cancelTouch, swipeReset); // attach start and cancel events
-                    
+
 
                     function swipeReset() {
                         startX = 0; movementX = 0; startY = 0; movementY = 0; scrolling = true; startPointerId = -1; direction = null;
@@ -332,16 +332,16 @@
                             break;
                             case 'move':
                                 if (msTouchDevice){
-                                    toProceed = startPointerId === event.originalEvent.pointerId;    
+                                    toProceed = startPointerId === event.originalEvent.pointerId;
                                 } else { // targetTouches checks touches on the element - allows for user to have swipe interactions on more than one element at a time
                                     toProceed = startPointerId === event.originalEvent.targetTouches[0].identifier;
                                 }
                             break;
                             case 'end':
                                 if (msTouchDevice){
-                                    toProceed = startPointerId === event.originalEvent.pointerId;   
+                                    toProceed = startPointerId === event.originalEvent.pointerId;
                                 } else { // need to check the changedTouches object here, as targetTouches will return empty if only one touch was present
-                                    toProceed = startPointerId === event.originalEvent.changedTouches[0].identifier;   
+                                    toProceed = startPointerId === event.originalEvent.changedTouches[0].identifier;
                                 }
                             break;
                         }
@@ -404,7 +404,7 @@
                                     $slider.css(animProp, 'translate3d(' + movementXOffset + 'px,0,0)');
                                 } else if (options.fade) { // fade movement
                                     if (movementX !== 0){ // prevent the opacity from trying to change on the initial touch
-                                        if (movementX > 0){ 
+                                        if (movementX > 0){
                                             if ($sliderItemCurrent.is($sliderItemFirst)){
                                                 $sliderItemInProg = $sliderItemLast;
                                             } else {
@@ -447,7 +447,7 @@
                                         break;
                                     case 'notReached':
                                         swipeNotReached = true;
-                                        animateDirection = null;       
+                                        animateDirection = null;
                                         break;
                                 }
                                 carouselps.animate();
@@ -506,7 +506,7 @@
             });
 
             if (options.responsive) {
-                var timer, 
+                var timer,
                     orientationSupport = isMobile ? window.hasOwnProperty('orientation') : false, // detect orientationchange support to use instead of resize event
                     resizeEvent = orientationSupport ? 'orientationchange' : 'resize';
 
