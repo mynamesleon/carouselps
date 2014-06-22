@@ -1,74 +1,142 @@
-
 <!DOCTYPE html>
+<!--[if IE 7]>    <html class="ie7 oldie no-js" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
+<!--[if IE 8]>    <html class="ie8 oldie no-js" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
+<!--[if IE 9]>    <html class="ie9 no-js" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
+<!--[if gt IE 9]><!-->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" class="no-js">
+<!--<![endif]-->
+
 <head>
-	<title>Responsive Banner</title>
+    <link href="http://www.lpslater.co.uk/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <title>Responsive Banner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
-	<link rel="stylesheet" href="css/style.css" />
-	<script src="script/jquery.min.js"></script>
-	<script src="script/jquery.carouselps.min.js"></script>
-    <script>
-    $(document).ready(function(){
-        $('.first').carouselps({
-            fade: false, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
-            continuous: true, // determines whether the slide loop is continuous
-            auto_slide: true, // whether or not the carousel will animate automatically
-            auto_direction: 'next', // auto-animate direction: 'next' or 'prev'
-            arrow_nav: true, // control whether or not arrow navigation renders
-            bottom_nav: true, // control whether or not bottom navigation renders
-            custom_bottom_nav: false, // can specify elements to replace default bottom nav, e.g. $('.bottom-nav > div') - they must all be siblings
-            use_css3: true, // if supported, control whether or not the slide transitions use css animations
-            swipe: true, // enable/disable touch swipe capability
-            swipe_threshold: 50, // swipe distance (in pixels) required for swipe end event to fire
-            responsive: true, // determine if the slides should alter width on resize - their width is set to the slider's parent width
-            adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
-            slide_delay: 2500, // the time interval between the carousel's auto-animations
-            animate_speed: 500, // the animation speed between slides
-            starting_slide: 1,
-            visible_slides: 1,
-            load_callback: function($slider) {}, // callback for when the banner has loaded 
-            slide_start: function($slider) {}, // callback for the start of each slide transition
-            slide_end: function($slider) {}, // callback for the end of each slide transition
-            bottom_nav_click: function($slider, $clickedItem) {}, // callback for click on bottom nav
-            arrow_click: function($slider, $clickedItem) {} // callback for arrow click
-        });
-        $('.second').carouselps({
-            fade: true, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
-            adjust_height: true, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
-            slide_delay: 2500, // the time interval between the carousel's auto-animations
-            starting_slide: 3,
-            use_css3: true,
-            visible_slides: 2
-        });
-        $('.third').carouselps({
-            fade: false, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
-            adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
-            starting_slide: 4,
-            visible_slides: 4
-        });
-    });
-    </script>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+    <link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+    <link href="css/style.css" rel="stylesheet" type="text/css" />
+    <!--[if lt IE 9]>
+        <script src="script/html5shiv.js" type="text/javascript"></script>
+    <![endif]-->
+    <script src="script/jquery.min.js"></script>
+    <script src="script/jquery.carouselps.js"></script>
+    <script src="script/main.js"></script>
 </head>
 
 <body>
-    <p></p>
-    <ul class="first">
-        <li><img src="images/slide1.png" /></li>
-        <li><img src="images/slide2.png" /></li>
-        <li><img src="images/slide3.png" /></li>
-        <li><img src="images/slide4.png" /></li>
-    </ul>
-    <p></p>
-    <ul class="second">
-        <li><img src="images/slide1.png" /></li>
-        <li><img src="images/slide2.png" /></li>
-        <li><img src="images/slide3.png" /></li>
-        <li><img src="images/slide4.png" /></li>
-    </ul>
-    <p></p>
-    <ul class="third">
-        <li><img src="images/slide1.png" /></li>
-        <li><img src="images/slide2.png" /></li>
-        <li><img src="images/slide3.png" /></li>
-        <li><img src="images/slide4.png" /></li>
-    </ul>
+    <main id="main-section">
+        <section id="landing-slider">
+            <div id="slider1" class="carouselps">
+                <article class="slide-1">
+                    <div class="bg"></div>
+                    <div class="content">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <h1>Carouselps</h1>
+                                        <div><p>A responsive, cross-browser compatible, jQuery slider plugin. It's also touch-friendly, easy to use, and completely free of course. You can find it over on <a href="http://www.github.com/mynamesleon/carouselps" target="_blank">Github</a></p></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+                <article class="slide-2">
+                    <div class="bg"></div>
+                    <div class="content">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <h2>Browser Compatibility and Animations</h2>
+                                        <div><p>Carouselps is fully supported back to IE7. The plugin uses simple, CSS driven animations by default to ensure the best performance, with jQuery animations as fallbacks for older browsers.</p></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+                <article class="slide-3">
+                    <div class="bg"></div>
+                    <div class="content">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <h2>Easy to use, with room to configure</h2>
+                                        <div><p>At its heart, Carouselps is incredibly simple, with only basic fade and slide transitions built in. But if you want to add your own twist to it, there are plenty of callbacks available for every step of the transitions. Even the progress bar at the base of this page is custom.<br/></p></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+                <article class="slide-4">
+                    <div class="bg"></div>
+                    <div class="content">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <h2>Touch Support</h2>
+                                        <div><p>Carouselps also includes touch support on the latest mobile devices, as well as touch screen Windows tablets and laptops. With callbacks included for the swipe movements as well, you can add your own twist to those animations too. You can even override them altogether and use the touch detection to create completely unique touch interactions on your content.</p></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+                <article class="slide-5">
+                    <div class="bg"></div>
+                    <div class="content">
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <h2>Details and Demos</h2>
+                                        <div><p>Carouselps is powering this page, and with plenty of custom options available, there's lots more you can do with it. Check out the <a href="#" class="show-details">details section</a> for more info and examples.</p></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            </div>
+            <div class="bottom-bar"></div>
+            <div class="unsplash-credit">Photography courtesy of <a href="http://unsplash.com/" target="_blank">unsplash</a></div>
+        </section>
+        <div id="details-section">
+            <div class="wrap">
+                <h1>Carouselps</h1>
+            </div>
+            <div class="details-wrap">
+                <section class="standard">
+                    <ul class="second">
+                        <li><img src="images/slide1.png" /></li>
+                        <li><img src="images/slide2.png" /></li>
+                        <li><img src="images/slide3.png" /></li>
+                        <li><img src="images/slide4.png" /></li>
+                    </ul>
+                </section>
+                <p></p>
+                <ul class="third">
+                    <li><img src="images/slide1.png" /></li>
+                    <li><img src="images/slide2.png" /></li>
+                    <li><img src="images/slide3.png" /></li>
+                    <li><img src="images/slide4.png" /></li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    <div id="no-script">
+        <table>
+            <tbody>
+                <tr>
+                    <td>
+                        <h2>No javascript eh?</h2>
+                        <div><p>This is a page about a javascript plugin... so it might be worth having javascript enabled to make the most of it.</p></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
