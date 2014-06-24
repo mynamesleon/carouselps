@@ -34,8 +34,7 @@ function landingSlider(){
             auto_slide: false,
             bottom_nav: false,
             swipe_threshold: 100,
-            slide_delay: 2500,
-            animate_speed: 500,
+            animate_speed: 750,
             slide_start: function(d) {
                 var slideLength = d.$slides.length,
                     nextSlideIndex = d.$nextSlide.index(),
@@ -106,7 +105,7 @@ function landingSlider(){
                         applyTransforms($landingSlider, 'translate3d(0,0,0)');
                     }
                 } else {
-                    if (d.posX >= -100){
+                    if (d.posX > -100){
                         $contentItems.addClass('transition');
                         applyTransforms($contentItems, 'translate3d(0,0,0)');
                     }
