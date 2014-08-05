@@ -4,36 +4,38 @@
 ~~                    Version 1.2.0                    ~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 (function ($) {
-    var sliderIndex = 0;
+    var sliderIndex = 0,
+        $window = $(window);
     window.carouselpsOptions = [];
+
     $.fn.carouselps = function (options) {
 
         var defaults = {
-            fade: false, // use fade or slide transition mode: if true, will set continuous and use_css3 to false
-            continuous: true, // determines whether the slide loop is continuous
-            starting_slide: 1, // the starting slide
-            visible_slides: 1, // how many slides are visible within the slider area (does not apply to the fade option)
+            fade: false, // use fade or slide transition mode: if true, will set continuous to false by default
+            continuous: true, // whether the slide loop can continuously progress in the same direction
+            starting_slide: 1, // the starting slide - if 0 is used, or a number greater than the number of slides, will be reset to 1
             auto_slide: true, // whether or not the carousel will animate automatically
             auto_direction: 'next', // auto-animate direction: 'next' or 'prev'
             slide_delay: 2500, // the time interval between the carousel's auto-animations
             arrow_nav: true, // control whether or not arrow navigation renders
-            bottom_nav: true, // control whether or not bottom navigation renders
-            custom_bottom_nav: false, // if bottom_nav is true, can specify custom bottom nav elements, e.g. $('.bottom-nav > div') - they must all be siblings
+            bottom_nav: true, // control whether or not bottom navigation is used
+            custom_bottom_nav: false, // whether to use default or custom bottom nav - if custom, elements used must all be siblings, e.g. $('.bottom-nav > div')
             use_css3: true, // if supported, control whether or not the slide transitions use css animations. Will fall back to jQuery animations in older browsers
             swipe: true, // enable/disable touch swipe capability (also works for browsers on touch screen laptops, including Internet Explorer)
             swipe_threshold: 100, // swipe distance (in pixels) required for slide to occur
             responsive: true, // determine if the slides should alter width on resize - their width is set based on the slider's parent width
             adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
-            adjust_height_after: false, // if adjust_height is true, whether to animate the height after the slide transition (will use the same animate_speed time)
+            adjust_height_after: false, // if adjust_height is true, whether to animate the height after the slide transition (will use the same animate_speed)
             animate_speed: 500, // the animation speed between slides
-            load_callback: function(d) {}, // callback for when the banner has loaded
-            slide_start: function(d) {}, // callback for the start of each slide transition
-            slide_end: function(d) {}, // callback for the end of each slide transition
-            bottom_nav_click: function(d) {}, // callback for click on bottom nav
-            arrow_click: function(d) {}, // callback for arrow click
-            swipe_start: function(d) {}, // callback for swipe start
-            swipe_move: function(d) {}, // callback for swipe movement
-            swipe_end: function(d) {} // callback for swipe end event
+            preload_images: true, // whether to preload all img tags inside the slides
+            load_callback: function(d) {}, // when the banner has loaded
+            slide_start: function(d) {}, // the start of each slide transition
+            slide_end: function(d) {}, // the end of each slide transition
+            bottom_nav_click: function(d) {}, // click on bottom nav
+            arrow_click: function(d) {}, // arrow click
+            swipe_start: function(d) {}, // swipe start
+            swipe_move: function(d) {}, // swipe movement
+            swipe_end: function(d) {} // swipe end event
         };
 
         options = $.extend({}, defaults, options);
@@ -56,6 +58,7 @@
                 $transitionElem,
                 bottomNavClickIndex,
                 isAnimating = false,
+                isResizing = false,
                 css3support = false,
                 animateDirection,
                 hovering = false,
@@ -68,10 +71,35 @@
             var thisCarouselOptions = window.carouselpsOptions[thisSliderIndex];
             sliderIndex++;
             var carouselps = {
+
+                prep: function () {
+                    if (options.preload_images){
+                        var $images = $sliderItems.find('img'),
+                            imgNum = 0;
+                        if ($images.length){
+                            $slider.addClass('loading');
+                            $images.each(function(){
+                                var src = $(this).attr('src');
+                                $('<img alt="" />').on('load error', function(){
+                                    imgNum++;
+                                    if (imgNum === $images.length){
+                                        carouselps.init();
+                                    }
+                                }).attr('src', src);
+                            });
+                            return;
+                        }
+                    }
+                    carouselps.init();
+                },
+
                 init: function () {
-                    $slider.addClass('carouselps').wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>"); // create wrapping divs
+                    $slider.removeClass('loading').addClass('carouselps').wrap("<div class='carouselps-wrapper'><div class='carouselps-wrap'/></div>"); // create wrapping divs
                     $sliderParent = $slider.parent(); // set key function variables
                     $sliderWrapper = $sliderParent.parent();
+                    if (options.starting_slide === 0 || options.starting_slide > $sliderItemsNumber){
+                        options.starting_slide = 1;
+                    }
                     $sliderItemCurrent = $sliderItems.eq(options.starting_slide - 1);
                     $sliderItemCurrent.addClass('current'); // add current class to the specified starting item
                     // call relevant functions based on set options
@@ -99,14 +127,13 @@
                     }
                     sliderCurrentIndex = $sliderItemCurrent.index();
                     if (typeof options.load_callback == 'function'){
-                        var d = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent}
-                        options.load_callback(d);
+                        var sentData = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent}
+                        options.load_callback(sentData);
                     }
                 },
 
                 fade: function () { // set relevant css properties for fade transitions
                     options.continuous = false; // set continuous to false, as the cloning is not needed in this case
-                    options.visible_slides = 1; // reset the visible_slides variable to 1
                     $sliderItems.css({'position': 'absolute', 'opacity': '0', 'z-index' : '1'});
                     $sliderItemCurrent.css({'opacity': '1', 'z-index' : '2'});
                 },
@@ -134,7 +161,7 @@
                 },
 
                 calcs: function () { // used on load and resize to set widths and slider position
-                    $sliderItems.width($sliderParent.width() / options.visible_slides); // sets each slide to initial width of container
+                    $sliderItems.width($sliderParent.width()); // sets each slide to initial width of container
                     sliderPos = $sliderItemCurrent.position().left * -1; // store position of the active slide
                     if (!options.fade) {
                         if (css3support) {
@@ -160,6 +187,7 @@
                 before_anim: function() { // set the new slide
                     $sliderItemCurrent.removeClass('current'); // remove current class initially
                     var newCurrentIndex;
+                    isResizing = false;
                     switch (animateDirection) { // determine index of new slide to show
                         case 'prev':
                             if (!$sliderItemFirst.is($sliderItemCurrent) || options.continuous) {
@@ -188,8 +216,8 @@
                     $sliderItemCurrent = $sliderItems.eq(newCurrentIndex); // set the main variables
                     thisCarouselOptions.preventSlide = false;
                     if (typeof options.slide_start == 'function'){ // slide start callback
-                        var d = {$slider: $slider, $slides: $sliderItems, $nextSlide: $sliderItemCurrent, $currentSlide: $currentSlide, direction: direction, sliderIndex: thisSliderIndex};
-                        options.slide_start(d);
+                        var sentData = {$slider: $slider, $slides: $sliderItems, $nextSlide: $sliderItemCurrent, $currentSlide: $currentSlide, direction: direction, sliderIndex: thisSliderIndex};
+                        options.slide_start(sentData);
                     }
                     if (thisCarouselOptions.preventSlide){
                         $sliderItemCurrent.removeClass('current');
@@ -279,23 +307,22 @@
                         $sliderItems.css('opacity', '0'); // set all other slider items opacity to 0
                         $sliderItemCurrent.css('opacity', '1');
                     }
-                    if (options.adjust_height && options.adjust_height_after) { // animate slider height if specified to animate after the slide transition
-                        $slider.stop().animate({height: $sliderItemCurrent.height()}, {duration: options.animate_speed, queue: false});
+                    if ( (options.adjust_height && options.adjust_height_after) || (options.adjust_height && isResizing) ) { // animate slider height if specified to animate after the slide transition
+                        var speed = isResizing ? options.animate_speed > 200 ? 200 : options.animate_speed : options.animate_speed;
+                        $slider.stop().animate({height: $sliderItemCurrent.height()}, {duration: speed, queue: false});
                     }
                     isAnimating = false; // reset relevant variables
                     swipeNotReached = false;
                     if (options.auto_slide) { // reset auto_slide functions on slide end
-                        if (slideTimer) { // clear the slideTimer to prevent any sudden additional slide transitions
-                            clearTimeout(slideTimer);
-                        }
+                        clearTimeout(slideTimer); // clear the slideTimer to prevent any sudden additional slide transitions
                         if (!hovering){ // if user isn't currently hovering over the slider, set the timer again
                             animateDirection = options.auto_direction;
                             slideTimer = setTimeout(carouselps.animate, options.slide_delay);
                         }
                     }
                     if (typeof options.slide_end == 'function'){ // slide end callback
-                        var d = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent};
-                        options.slide_end(d);
+                        var sentData = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent};
+                        options.slide_end(sentData);
                     }
                 },
 
@@ -304,9 +331,9 @@
                     slideTimer = setTimeout(carouselps.animate, options.slide_delay); // store timeout
                     $sliderWrapper.hover(function () { // on hover, clear the timeout to stop the slider from moving
                         hovering = true;
-                        if (slideTimer) {
+
                             clearTimeout(slideTimer);
-                        }
+
                     }, function () { // on mouseleave, set the timeout again
                         hovering = false;
                         animateDirection = options.auto_direction;
@@ -350,7 +377,8 @@
                     }
 
                     function toProceed(event, touchType){ // the conditionals that determine whether the touch event should be ignored or not
-                        var proceed = msTouchDevice ? event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2 : true; // in IE, make sure the event type is touch (insted of pen or mouse)
+                        // in IE, make sure the event type is touch (insted of pen or mouse)
+                        var proceed = msTouchDevice ? event.originalEvent.pointerType === 'touch' || event.originalEvent.pointerType === 2 : true;
                         if (proceed){
                             switch(touchType){
                                 case 'start':
@@ -399,8 +427,8 @@
                                     $('html').bind(moveTouch, slideMove).bind(endTouch, slideEnd); // attach move and end events
                                 }
                                 if (typeof options.swipe_start == 'function'){
-                                    var d = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent};
-                                    options.swipe_start(d);
+                                    var sentData = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent};
+                                    options.swipe_start(sentData);
                                 }
                             }
                         }
@@ -430,8 +458,8 @@
                                 requestAnimFrame(function(){
                                     thisCarouselOptions.preventSwipe = false;
                                     if (typeof options.swipe_move == 'function'){
-                                        var d = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent, posX: movementX, posY: movementY, sliderIndex: thisSliderIndex};
-                                        options.swipe_move(d);
+                                        var sentData = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent, posX: movementX, posY: movementY, sliderIndex: thisSliderIndex};
+                                        options.swipe_move(sentData);
                                     }
                                     if (thisCarouselOptions.preventSwipe){
                                         return false;
@@ -468,8 +496,8 @@
                         if (toProceed(event, 'end')) {
                             if (!scrolling ) {
                                 if (typeof options.swipe_end == 'function'){
-                                    var d = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent, posX: movementX, posY: movementY, sliderIndex: thisSliderIndex};
-                                    options.swipe_end(d);
+                                    var sentData = {$slider: $slider, $slides: $sliderItems, $currentSlide: $sliderItemCurrent, posX: movementX, posY: movementY, sliderIndex: thisSliderIndex};
+                                    options.swipe_end(sentData);
                                 }
                                 if (!thisCarouselOptions.preventSwipe){
                                     if (swipeDirection === 'horizontal') {
@@ -509,8 +537,8 @@
                         animateDirection = $arrow.data('direction');
                         carouselps.animate();
                         if (typeof options.arrow_click == 'function'){ // arrow click callback
-                            var d = {$slider: $slider, $slides: $sliderItems, $clickedItem: $arrow, direction: animateDirection};
-                            options.arrow_click(d);
+                            var sentData = {$slider: $slider, $slides: $sliderItems, $clickedItem: $arrow, direction: animateDirection};
+                            options.arrow_click(sentData);
                         }
                     });
                 },
@@ -536,34 +564,38 @@
                             carouselps.animate();
                         }
                         if (typeof options.bottom_nav_click == 'function'){ // bottom nav click callback
-                            var d = {$slider: $slider, $slides: $sliderItems, $clickedItem: $clickedItem};
-                            options.bottom_nav_click(d);
+                            var sentData = {$slider: $slider, $slides: $sliderItems, $clickedItem: $clickedItem};
+                            options.bottom_nav_click(sentData);
                         }
                     });
                 }
             };
 
-            carouselps.init();
-
-            $(window).bind('load', function () {
-                if (options.adjust_height) { // if adjust height, set item heights on window load to cater for image load times
-                    $slider.height($sliderItemCurrent.height());
-                }
-                if (options.responsive){
-                    carouselps.calcs();
-                }
-            });
+            carouselps.prep();
 
             if (options.responsive) {
+                // custom orientation change detection to avoid android bugs:
+                // 1) resize event firing when chrome nav bar slides in or out of view
+                // 2) orientationchange event firing before window width/height has been reset
                 var timer,
-                    orientationSupport = isMobile ? window.hasOwnProperty('orientation') : false, // detect orientationchange support to use instead of resize event
-                    resizeEvent = orientationSupport ? 'orientationchange' : 'resize';
+                    orientationchanged = true,
+                    newOrientation,
+                    oldOrientation = $window.width() > $window.height() ? 'landscape' : 'portrait';
 
-                $(window).bind(resizeEvent, function () {
-                    if (timer) { // use timer so that resize event fires on resize end, rather than for every pixel movement
+                $window.resize(function(){
+                    if (timer){ // use timer so that resize event fires on resize end, rather than for every pixel movement
                         clearTimeout(timer);
                     }
-                    timer = setTimeout(carouselps.calcs, orientationSupport ? 200 : 100);
+                    timer = setTimeout(function(){
+                        if (isMobile){ // only detect if orientation has change on mobile
+                            newOrientation = $window.width() > $window.height() ? 'landscape' : 'portrait';
+                            orientationchanged = newOrientation === oldOrientation ? false : true;
+                        }
+                        if (orientationchanged){ // on desktop, orientationchanged var is always true
+                            carouselps.calcs();
+                            isResizing = true;
+                        }
+                    }, 100);
                 });
             }
         });

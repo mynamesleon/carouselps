@@ -7,15 +7,18 @@
 <!--<![endif]-->
 
 <head>
+    <title>Carouselps | touch-friendly jQuery slider plugin by Leon Slater</title>
+    <meta name="description" content="Carouselps is a jQuery slider plugin that is responsive, cross-browser compatible, touch-friendly, easy to use, and free of course." />
+    <meta name="Keywords" content="jQuery, slider, carouselps, carousel, cross-browser, touch, lpslater, Leon Slater" />
     <link href="http://www.lpslater.co.uk/favicon.ico" rel="shortcut icon" type="image/x-icon" />
-    <title>Responsive Banner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
-    <link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+    <!--<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+    <link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>-->
+    <link href='http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400' rel='stylesheet' type='text/css'>
+    <!--[if lt IE 9]> <script src="script/html5shiv.js" type="text/javascript"></script> <![endif]-->
+    <!--[if gte IE 9]><!--> <script src="script/prism.js"></script> <![endif]-->
+    <link href="css/prism.css" rel="stylesheet" type="text/css" />
     <link href="css/style.css" rel="stylesheet" type="text/css" />
-    <!--[if lt IE 9]>
-        <script src="script/html5shiv.js" type="text/javascript"></script>
-    <![endif]-->
     <script src="script/jquery.min.js"></script>
     <script src="script/jquery.carouselps.js"></script>
     <script src="script/main.js"></script>
@@ -63,7 +66,7 @@
                                 <tr>
                                     <td>
                                         <h2>Easy to use, with room to configure</h2>
-                                        <div><p>At its heart, Carouselps is incredibly simple, with only basic fade and slide transitions built in. But if you want to add your own twist to it, there are plenty of callbacks available for every step of the transitions. Even the progress bar at the base of this page is custom.<br/></p></div>
+                                        <div><p>At its heart, Carouselps is incredibly simple, with only basic fade and slide transitions built in. But with callbacks available for practically every step of the transitions, you can easily add your own twist to it.</p></div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -78,7 +81,7 @@
                                 <tr>
                                     <td>
                                         <h2>Touch Support</h2>
-                                        <div><p>Carouselps also includes touch support on the latest mobile devices, as well as touch screen Windows tablets and laptops. With callbacks included for the swipe movements as well, you can add your own twist to those animations too. You can even override them altogether and use the touch detection to create completely unique touch interactions on your content.</p></div>
+                                        <div><p>Carouselps includes full touch support for the latest mobile devices, as well as touch screen Windows tablets and laptops. You can add your own twist to those animations too through the slider's callbacks, or even override them altogether!</p></div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -104,28 +107,89 @@
             <div class="bottom-bar"></div>
             <div class="unsplash-credit">Photography courtesy of <a href="http://unsplash.com/" target="_blank">unsplash</a></div>
         </section>
-        <div id="details-section">
-            <div class="wrap">
-                <h1>Carouselps</h1>
-            </div>
-            <div class="details-wrap">
-                <section class="standard">
-                    <ul class="second">
-                        <li><img src="images/slide1.png" /></li>
-                        <li><img src="images/slide2.png" /></li>
-                        <li><img src="images/slide3.png" /></li>
-                        <li><img src="images/slide4.png" /></li>
+        <section id="details-section">
+            <nav id="main-nav" class="transition">
+                <div class="top-area">
+                    <div class="logo-holder">
+                        <a class="scroll-to" href="#intro">
+                            <img src="http://www.lpslater.co.uk/images/logo.png" class="site-logo" alt="lpslater logo">
+                        </a>
+                    </div>
+                    <ul class="nav">
+                        <li>
+                            <a class="scroll-to" href="#cv">CV</a>
+                            <ul class="cv-nav">
+                                <li><a class="scroll-to" href="#cv-experience">Experience</a></li>
+                                <li><a class="scroll-to" href="#cv-education">Education</a></li>
+                                <li><a class="scroll-to" href="#cv-interests">Interests</a></li>
+                            </ul>
+                        </li>
+                        <li><a class="scroll-to" href="#videos">Videos</a></li>
+                        <li><a class="scroll-to" href="#contact">Contact</a></li>
                     </ul>
-                </section>
-                <p></p>
-                <ul class="third">
-                    <li><img src="images/slide1.png" /></li>
-                    <li><img src="images/slide2.png" /></li>
-                    <li><img src="images/slide3.png" /></li>
-                    <li><img src="images/slide4.png" /></li>
+                </div>
+                <ul class="social box-size">
+                    <li><a target="_blank" href="https://www.youtube.com/channel/UCt3pI6JuFQuDWMrZrfkRo-Q/videos" class="youtube"></a></li>
+                    <li><a target="_blank" href="https://twitter.com/Bollockstofashi" class="twitter"></a></li>
+                    <li><a target="_blank" href="http://www.linkedin.com/pub/lianna-pim/57/b15/148" class="linkedin"></a></li>
+                    <li><a target="_blank" href="http://gb.pinterest.com/bollocksfashion/" class="pinterest"></a></li>
                 </ul>
+            </nav>
+            <div class="outer-wrap">
+                <div class="wrap">
+                    <h1>Carouselps</h1>
+                </div>
+                <div class="details-wrap">
+                    <section class="standard">
+                        <ul class="second d-slider">
+                            <li><img src="images/slide1.png" alt="carouselps" /></li>
+                            <li><img src="images/slide2.png" alt="carouselps" /></li>
+                            <li><img src="images/slide3.png" alt="carouselps" /></li>
+                            <li><img src="images/slide4.png" alt="carouselps" /></li>
+                        </ul>
+                    </section>
+                    <p></p>
+                    <ul class="third d-slider">
+                        <li><img src="images/escalator.jpg" alt="carouselps escalator" /></li>
+                        <li><img src="images/store.jpg" alt="carouselps store" /></li>
+                        <li><img src="images/tea.jpg" alt="carouselps tea" /></li>
+                        <li><img src="images/view.jpg" alt="carouselps view" /></li>
+                    </ul>
+                </div>
+                <div class="wrap">
+<pre class="language-javascript line-numbers"><code>
+var defaults = {
+    fade: false, // use fade or slide transition mode: if true, will set continuous to false by default
+    continuous: true, // whether the slide loop can continuously progress in the same direction
+    starting_slide: 1, // the starting slide - if 0 is used, or a number greater than the number of slides, will be reset to 1
+    auto_slide: true, // whether or not the carousel will animate automatically
+    auto_direction: 'next', // auto-animate direction: 'next' or 'prev'
+    slide_delay: 2500, // the time interval between the carousel's auto-animations
+    arrow_nav: true, // control whether or not arrow navigation renders
+    bottom_nav: true, // control whether or not bottom navigation is used
+    custom_bottom_nav: false, // whether to use default or custom bottom nav - if custom, elements used must all be siblings, e.g. $('.bottom-nav > div')
+    use_css3: true, // if supported, control whether or not the slide transitions use css animations. Will fall back to jQuery animations in older browsers
+    swipe: true, // enable/disable touch swipe capability (also works for browsers on touch screen laptops, including Internet Explorer)
+    swipe_threshold: 100, // swipe distance (in pixels) required for slide to occur
+    responsive: true, // determine if the slides should alter width on resize - their width is set based on the slider's parent width
+    adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
+    adjust_height_after: false, // if adjust_height is true, whether to animate the height after the slide transition (will use the same animate_speed)
+    animate_speed: 500, // the animation speed between slides
+    preload_images: true, // whether to preload all img tags inside the slides
+    load_callback: function(d) {}, // when the banner has loaded
+    slide_start: function(d) {}, // the start of each slide transition
+    slide_end: function(d) {}, // the end of each slide transition
+    bottom_nav_click: function(d) {}, // click on bottom nav
+    arrow_click: function(d) {}, // arrow click
+    swipe_start: function(d) {}, // swipe start
+    swipe_move: function(d) {}, // swipe movement
+    swipe_end: function(d) {} // swipe end event
+};
+</code></pre>
+                </div>
             </div>
-        </div>
+        </section>
+        <div id="loader" class="loader transition-half"></div>
     </main>
     <div id="no-script">
         <table>
