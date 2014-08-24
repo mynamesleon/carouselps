@@ -192,7 +192,9 @@ html.details #details-section {height: auto; min-height: 0;}
 
 @media screen and (max-width:1000px) {
     .carouselps-wrapper { width: 100%;}
+    .outer-wrap {padding: 0 15px;}
     .wrap {width: 100%;}
+    #main-nav {display: none;}
 }
 @media screen and (max-width:800px) {
     #landing-slider .carouselps-arrow.next {background-size: 50px; width: 70px;}

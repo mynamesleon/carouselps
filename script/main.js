@@ -12,6 +12,10 @@ $(document).ready(function(){
     landingSlider();
 });
 
+function setTransforms($elem, prop){
+    $elem.css({ '-webkit-transform': prop, '-moz-transform': prop, '-o-transform': prop, 'transform': prop });
+}
+
 function landingSlider(){
     var $slider1 = $('#slider1'),
         $landingSlider = $('#landing-slider'),
@@ -38,16 +42,23 @@ function landingSlider(){
             }, 1000);
         });
     } else {
+        var lastSlide = false,
+            slideLength,
+            bottomBarStartPoint,
+            divisionVal;
+
         $slider1.carouselps({
             fade: true,
             auto_slide: false,
+            use_css3: true,
             bottom_nav: false,
             swipe_threshold: 100,
             animate_speed: 750,
             slide_start: function(d) {
-                var slideLength = d.$slides.length,
-                    nextSlideIndex = d.$nextSlide.index(),
+                var nextSlideIndex = d.$nextSlide.index(),
                     preventSlide = false;
+
+                slideLength = d.$slides.length;
 
                 if (isLastSlide(d)){ // if going from last slide to first
                     preventSlide = window.carouselpsOptions[d.sliderIndex].preventSlide = true; // prevent default slide behaviour
@@ -79,15 +90,20 @@ function landingSlider(){
                 }
             },
             swipe_start: function(d){
+                lastSlide = isLastSlide(d);
+                slideLength = d.$slides.length;
+
                 $contentItems = d.$currentSlide.find('h1, h2, td > div');
                 $contentDiv = $contentItems.filter('div');
                 $contentHeaders = $contentItems.filter('h1, h2');
                 $bottomBar.add($contentItems).removeClass('transition');
                 windowWidth = $window.width();
                 windowHeight = $window.height();
+
+                bottomBarStartPoint = windowWidth / slideLength * d.$currentSlide.index();
+                divisionVal = windowWidth < 600 ? 10 : 20;
             },
             swipe_move: function(d) {
-                var lastSlide = isLastSlide(d);
                 if (d.posX > 0){ // if swiping to go left, prevent plugin's default swipe action
                     window.carouselpsOptions[d.sliderIndex].preventSwipe = true;
                     if (lastSlide){ // if swiping to the right on last slide, ensure slider is in correct place
@@ -100,20 +116,16 @@ function landingSlider(){
                         $landingSlider.removeClass('transition-half');
                         setTransforms($landingSlider, 'translate3d('+ d.posX / 3 + "px" +',0,0)');
                     } else {
-                        var slideLength = d.$slides.length,
-                            bottomBarStartPoint = windowWidth / slideLength * d.$currentSlide.index(),
-                            bottomBarTranslate = bottomBarStartPoint + (d.posX / slideLength) * -1 + 'px',
-                            divisionVal = windowWidth < 600 ? 10 : 20,
+                        var bottomBarTranslate = bottomBarStartPoint + (d.posX / slideLength) * -1 + 'px',
                             contentTransform = d.posX / divisionVal;
                         setTransforms($bottomBar, 'translate3d('+ bottomBarTranslate +', 0, 0)');
                         setTransforms($contentDiv, 'translate3d(0, '+ contentTransform * -1 + 'px' +', 0)');
                         setTransforms($contentHeaders, 'translate3d(0, '+ contentTransform + 'px' +', 0)');
-                        $contentItems.css('opacity', 1 - (Math.abs(d.posX) / windowWidth));
                     }
                 }
             },
             swipe_end: function(d){
-                if (isLastSlide(d)){ // if on lsat slide
+                if (lastSlide){ // if on last slide
                     if (d.posX < 0){ // if user has swiped to show right hand area...
                         prepDetailsSection();
                     } else { // if not, reset translate3d position
@@ -212,8 +224,4 @@ function detailsSliders(){
         visible_slides: 4,
         load_callback: hideLoader
     });
-}
-
-function setTransforms($elem, prop){
-    $elem.css({ '-webkit-transform': prop, '-moz-transform': prop, '-o-transform': prop, 'transform': prop });
 }
