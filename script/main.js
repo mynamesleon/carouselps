@@ -220,7 +220,7 @@ function detailsSliders(){
     $('.third').carouselps({
         fade: false,
         adjust_height: false,
-        starting_slide: 4,
+        starting_slide: 3,
         visible_slides: 4,
         load_callback: hideLoader
     });

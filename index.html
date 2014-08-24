@@ -117,15 +117,15 @@
                     </div>
                     <ul class="nav">
                         <li>
-                            <a class="scroll-to" href="#cv">CV</a>
-                            <ul class="cv-nav">
-                                <li><a class="scroll-to" href="#cv-experience">Experience</a></li>
-                                <li><a class="scroll-to" href="#cv-education">Education</a></li>
-                                <li><a class="scroll-to" href="#cv-interests">Interests</a></li>
+                            <a class="scroll-to" href="#">Link</a>
+                            <ul>
+                                <li><a class="scroll-to" href="#">Link</a></li>
+                                <li><a class="scroll-to" href="#">Link</a></li>
+                                <li><a class="scroll-to" href="#">Link</a></li>
                             </ul>
                         </li>
-                        <li><a class="scroll-to" href="#videos">Videos</a></li>
-                        <li><a class="scroll-to" href="#contact">Contact</a></li>
+                        <li><a class="scroll-to" href="#">Link</a></li>
+                        <li><a class="scroll-to" href="#">Link</a></li>
                     </ul>
                 </div>
                 <ul class="social box-size">
@@ -159,23 +159,32 @@
                 <div class="wrap">
 <pre class="language-javascript line-numbers"><code>
 var defaults = {
+    // slider modes
     fade: false, // use fade or slide transition mode: if true, will set continuous to false by default
     continuous: true, // whether the slide loop can continuously progress in the same direction
+    responsive: true, // determine if the slides should alter width on resize - their width is set based on the slider's parent width
+
+    // base options
     starting_slide: 1, // the starting slide - if 0 is used, or a number greater than the number of slides, will be reset to 1
+    preload_images: true, // whether to preload all img tags inside the slides
+    swipe: true, // enable/disable touch swipe capability (also works for browsers on touch screen laptops, including Internet Explorer)
+    swipe_threshold: 100, // swipe distance (in pixels) required for slide to occur
+    use_css3: true, // if supported, use css animations for transitions - will fall back to jQuery animations in unsupported browsers
+    adjust_height: false, // whether the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
+    adjust_height_after: false, // if adjust_height is true, whether to animate height after slide transition (will use the same animate_speed)
+
+    // animations
     auto_slide: true, // whether or not the carousel will animate automatically
     auto_direction: 'next', // auto-animate direction: 'next' or 'prev'
     slide_delay: 2500, // the time interval between the carousel's auto-animations
+    animate_speed: 500, // the animation speed between slides
+
+    // controls
     arrow_nav: true, // control whether or not arrow navigation renders
     bottom_nav: true, // control whether or not bottom navigation is used
-    custom_bottom_nav: false, // whether to use default or custom bottom nav - if custom, elements used must all be siblings, e.g. $('.bottom-nav > div')
-    use_css3: true, // if supported, control whether or not the slide transitions use css animations. Will fall back to jQuery animations in older browsers
-    swipe: true, // enable/disable touch swipe capability (also works for browsers on touch screen laptops, including Internet Explorer)
-    swipe_threshold: 100, // swipe distance (in pixels) required for slide to occur
-    responsive: true, // determine if the slides should alter width on resize - their width is set based on the slider's parent width
-    adjust_height: false, // whether or not the slider should adjust height based on the active slide - recommended for fade if not using a fixed height
-    adjust_height_after: false, // if adjust_height is true, whether to animate the height after the slide transition (will use the same animate_speed)
-    animate_speed: 500, // the animation speed between slides
-    preload_images: true, // whether to preload all img tags inside the slides
+    custom_bottom_nav: false, // whether to use default or custom bottom nav - if custom, elements used must all be siblings
+
+    // callbacks
     load_callback: function(d) {}, // when the banner has loaded
     slide_start: function(d) {}, // the start of each slide transition
     slide_end: function(d) {}, // the end of each slide transition
